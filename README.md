@@ -11,10 +11,14 @@ no pre requirements required
 ## Usage
 
 ```dart
+class MapItem implements MarkerItem {
+  // TODO: implement all fields
+}
+
 final GoogleMapController mapController = GoogleMapController();
 final String? selectedItemId = null;
 
-PaginationMap<RealEstate>(
+PaginationMap<MapItem>(
     initialCameraPosition: CameraPosition(target: LatLng(33.4176386794544, 44.34958527530844)),
     currentUserLocation: LatLng(33.4176386794544, 44.34958527530844),
     height: 200,
@@ -28,8 +32,8 @@ PaginationMap<RealEstate>(
     onItemsChanged: (int skip, CameraPosition cameraPosition) async {
         return getItem(skip, cameraPosition)
     },
-    pageViewItemBuilder: (BuildContext context, RealEstate item) {
-        return RealEstateListTile(item: item);
+    pageViewItemBuilder: (BuildContext context, MapItem item) {
+        return MapItemListTile(item: item);
     },
     selectedItemId: selectedItemId,
     onSelectedItemChanged: (value) {
