@@ -22,7 +22,7 @@ class Pagination<T> {
   }
 
   factory Pagination.empty() {
-    // ignore: prefer_const_literals_to_create_immutables
-    return const Pagination(count: 0, results: []);
+    // ignore: prefer_const_constructors
+    return Pagination(count: 0, results: <T>[]);
   }
 }
