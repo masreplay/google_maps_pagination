@@ -1,5 +1,7 @@
 // paginate with [PaginationMap] on google map
-class Pagination<T> {
+import 'marker_item.dart';
+
+class Pagination<T extends MarkerItem> {
   /// count of all results
   final int count;
 
@@ -12,14 +14,10 @@ class Pagination<T> {
   });
 
   /// No pagination results
-  bool get isEmpty {
-    return count == 0;
-  }
+  bool get isEmpty => count == 0;
 
   /// Have pagination results
-  bool get isNotEmpty {
-    return !isEmpty;
-  }
+  bool get isNotEmpty => count != 0;
 
   factory Pagination.empty() {
     // ignore: prefer_const_constructors
