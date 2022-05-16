@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:pagination_map/pagination.dart';
+import 'package:google_maps_pagination/pagination.dart';
 
 import 'marker_item.dart';
 

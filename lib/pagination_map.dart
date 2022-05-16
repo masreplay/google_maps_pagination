@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:pagination_map/map_zoom_controller.dart';
-import 'package:pagination_map/marker_item.dart';
-import 'package:pagination_map/page_view_over_flow.dart';
-import 'package:pagination_map/pagination.dart';
-import 'package:pagination_map/pagination_state.dart';
+import 'package:google_maps_pagination/map_zoom_controller.dart';
+import 'package:google_maps_pagination/marker_item.dart';
+import 'package:google_maps_pagination/page_view_over_flow.dart';
+import 'package:google_maps_pagination/pagination.dart';
+import 'package:google_maps_pagination/pagination_state.dart';
 
 import '../callbacks.dart';
 import 'map_pagination_controller.dart';

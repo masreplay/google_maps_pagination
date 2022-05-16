@@ -1,8 +1,8 @@
-name: pagination_map
+name: google_maps_pagination
 description: Pagination with pageView and markers throw google map
-version: 0.0.1
+version: 0.0.2
 homepage: http://www.matheer.com
-repository: https://github.com/masreplay/pagination_map
+repository: https://github.com/masreplay/google_maps_pagination
 
 environment:
   sdk: ">=2.16.1 <3.0.0"
