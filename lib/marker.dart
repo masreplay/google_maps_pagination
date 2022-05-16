@@ -1,18 +1,9 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:pagination_map/map_zoom_controller.dart';
-import 'package:pagination_map/marker_item.dart';
-import 'package:pagination_map/page_view_over_flow.dart';
-import 'package:pagination_map/pagination.dart';
-import 'package:pagination_map/pagination_state.dart';
-
-import '../callbacks.dart';
-import 'map_pagination_controller.dart';
 
 Future<BitmapDescriptor> getMarkerBitmap({
   double? size,
@@ -60,10 +51,6 @@ Future<BitmapDescriptor> getMarkerBitmap({
     ..strokeWidth = strokeWidth;
 
   canvas.drawPath(path, borderPaint);
-
-  /// shadow
-  // canvas.drawShadow(
-  //     path.shift(Offset(0, shadowOffset)), Colors.black, 2, true);
 
   /// draw speech dialog
   canvas.drawPath(path, paint);

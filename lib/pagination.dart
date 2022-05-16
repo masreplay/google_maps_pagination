@@ -1,4 +1,3 @@
-// paginate with [PaginationMap] on google map
 class Pagination<T> {
   /// count of all results
   final int count;
@@ -18,7 +17,7 @@ class Pagination<T> {
 
   /// Have pagination results
   bool get isNotEmpty {
-    return !isEmpty;
+    return count != 0;
   }
 
   factory Pagination.empty() {
