@@ -82,7 +82,7 @@ packages:
     source: sdk
     version: "0.0.0"
   google_maps_flutter:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: google_maps_flutter
       url: "https://pub.dartlang.org"

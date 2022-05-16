@@ -1,10 +1,11 @@
 import 'package:flutter/widgets.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_pagination/pagination.dart';
+import 'package:google_maps_pagination/models/pagination.dart';
 
-import 'marker_item.dart';
+import '../models/marker_item.dart';
 
-typedef ItemsWidgetBuilder<T> = Widget Function(BuildContext context, T item);
+typedef ItemsWidgetBuilder<T> = Widget Function(
+    BuildContext context, T item, int index);
 
 typedef MapScrollCallback = Future<void> Function(
     CameraPosition cameraPosition);

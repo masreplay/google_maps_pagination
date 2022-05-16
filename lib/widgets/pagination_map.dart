@@ -3,15 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:google_maps_pagination/map_zoom_controller.dart';
-import 'package:google_maps_pagination/marker_item.dart';
-import 'package:google_maps_pagination/page_view_over_flow.dart';
-import 'package:google_maps_pagination/pagination.dart';
-import 'package:google_maps_pagination/pagination_state.dart';
-
-import '../callbacks.dart';
+import 'package:google_maps_pagination/callbacks/callbacks.dart';
+import 'package:google_maps_pagination/enums/pagination_state.dart';
+import 'package:google_maps_pagination/widgets/map_zoom_controller.dart';
+import 'package:google_maps_pagination/models/marker_item.dart';
+import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
+import 'package:google_maps_pagination/models/pagination.dart';
 import 'map_pagination_controller.dart';
-import 'marker.dart';
+import '../makers/marker.dart';
 
 const int defaultMapTake = 25;
 
@@ -24,8 +23,10 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final MapType mapType;
 
-  final ValueReturnChanged<String> labelFormatter;
+  final ValueReturnChanged<String> markerLabelFormatter;
   final PageController pageViewController;
+
+  final Future<BitmapDescriptor>? getMarker;
 
   final OnItemsChanged<T> onItemsChanged;
 
@@ -41,17 +42,18 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   const PaginationMap({
     Key? key,
     required this.initialCameraPosition,
+    required this.mapController,
     required this.setMapController,
     required this.currentUserLocation,
-    required this.mapController,
     required this.pageViewController,
     required this.onItemsChanged,
-    required this.labelFormatter,
+    required this.markerLabelFormatter,
     required this.selectedItemId,
     required this.onSelectedItemChanged,
     required this.pageViewItemBuilder,
-    required this.height,
+    this.height = 100,
     this.mapType = MapType.normal,
+    this.getMarker,
   }) : super(key: key);
 
   @override
@@ -156,7 +158,7 @@ class _PaginationMapState<T extends MarkerItem>
                             }
                           },
                           child: widget.pageViewItemBuilder(
-                              context, _items.results[index]),
+                              context, _items.results[index],index),
                         ),
                       );
                     },
@@ -256,7 +258,7 @@ class _PaginationMapState<T extends MarkerItem>
   Future<BitmapDescriptor> _getMarkerBitMap(
       bool isSelected, String label) async {
     return await getMarkerBitmap(
-      text: widget.labelFormatter(label),
+      text: widget.markerLabelFormatter(label),
       textColor: isSelected ? Colors.black : Colors.white,
       color:
           isSelected ? const Color(0xffeaa329) : Theme.of(context).primaryColor,
@@ -279,14 +281,14 @@ class _PaginationMapState<T extends MarkerItem>
     _updateMarkers();
   }
 
-  Future<void> _updateMarkers([bool dis = true]) async {
+  Future<void> _updateMarkers() async {
     final _markers = <Marker>[];
 
     for (var i = 0; i < _items.results.length; i++) {
       final currentElement = _items.results[i];
-      var _isSelected = dis && _selectedItemId == currentElement.id;
+      final _isSelected = _selectedItemId == currentElement.id;
 
-      final markerIcon =
+      final markerIcon = await widget.getMarker ??
           await _getMarkerBitMap(_isSelected, currentElement.label);
 
       final marker = Marker(
