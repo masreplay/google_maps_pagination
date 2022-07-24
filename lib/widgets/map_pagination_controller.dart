@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 
 class MapPaginationController extends StatelessWidget {
+  final int skip;
+
   final Color controllerColor;
+
   final Color textColor;
 
   final Color backgroundColor;
+
+  final String noItemFoundText;
+
+  final bool isLoading;
+
+  final int take;
+
+  final int count;
+
+  final TextStyle? controllerTextStyle;
+
+  final ValueChanged<int> onNextPressed;
+
+  final ValueChanged<int> onPreviousPressed;
 
   const MapPaginationController({
     Key? key,
@@ -14,19 +31,12 @@ class MapPaginationController extends StatelessWidget {
     required this.isLoading,
     required this.onNextPressed,
     required this.onPreviousPressed,
-    this.controllerColor = const Color(0xFF007bff),
-    this.backgroundColor = const Color(0xFFFFDA85),
-    this.textColor = Colors.black,
-    this.noItemFoundTitle = "No items found",
+    required this.noItemFoundText,
+    required this.controllerTextStyle,
+    required this.controllerColor,
+    required this.backgroundColor,
+    required this.textColor,
   }) : super(key: key);
-
-  final String noItemFoundTitle;
-  final int skip;
-  final bool isLoading;
-  final int take;
-  final int count;
-  final ValueChanged<int> onNextPressed;
-  final ValueChanged<int> onPreviousPressed;
 
   int get _nextSkip {
     return skip + take;
@@ -50,13 +60,13 @@ class MapPaginationController extends StatelessWidget {
 
   String _middleTitle(BuildContext context) {
     if (count == 0) {
-      return noItemFoundTitle;
+      return noItemFoundText;
     } else if (_nextSkip < count) {
       return "${skip + 1} - $_nextSkip";
     } else if (_nextSkip > count) {
       return "${skip + 1} - $count";
     } else {
-      return noItemFoundTitle;
+      return noItemFoundText;
     }
   }
 
@@ -79,10 +89,11 @@ class MapPaginationController extends StatelessWidget {
             ),
             label: Text(
               _previousButtonTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle2
-                  ?.copyWith(color: textColor),
+              style: controllerTextStyle ??
+                  Theme.of(context)
+                      .textTheme
+                      .subtitle2
+                      ?.copyWith(color: textColor),
             ),
           ),
           Visibility(
@@ -90,10 +101,11 @@ class MapPaginationController extends StatelessWidget {
             replacement: const CircularProgressIndicator(),
             child: Text(
               _middleTitle(context),
-              style: Theme.of(context).textTheme.subtitle2?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
-                  ),
+              style: controllerTextStyle ??
+                  Theme.of(context).textTheme.subtitle2?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
             ),
           ),
           TextButton.icon(
@@ -105,10 +117,11 @@ class MapPaginationController extends StatelessWidget {
             style: TextButton.styleFrom(primary: controllerColor),
             icon: Text(
               _nextButtonTitle,
-              style: Theme.of(context)
-                  .textTheme
-                  .subtitle2
-                  ?.copyWith(color: textColor),
+              style: controllerTextStyle ??
+                  Theme.of(context)
+                      .textTheme
+                      .subtitle2
+                      ?.copyWith(color: textColor),
             ),
             label: Icon(
               Icons.arrow_forward_ios_rounded,
