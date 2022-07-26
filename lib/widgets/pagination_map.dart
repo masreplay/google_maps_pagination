@@ -47,11 +47,14 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final ItemsWidgetBuilder<T> pageViewItemBuilder;
 
+  final Set<Polygon> polygons;
+
   /// Default pageView items height
   /// because horizontal pageView cannot auto measure it's items height
   final double initialHeight;
 
   final Duration nextRequestDuration;
+
   const PaginationMap({
     Key? key,
     required this.initialCameraPosition,
@@ -74,6 +77,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.backgroundColor = const Color(0xFFFFDA85),
     this.textColor = Colors.black,
     this.controllerTextStyle,
+    this.polygons = const {},
   }) : super(key: key);
 
   @override
@@ -256,6 +260,7 @@ class _PaginationMapState<T extends MarkerItem>
         _cameraPosition = position;
       },
       gestureRecognizers: const {},
+      polygons: widget.polygons,
     );
   }
 
