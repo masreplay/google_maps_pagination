@@ -16,9 +16,9 @@ import 'map_pagination_controller.dart';
 
 class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final CameraPosition initialCameraPosition;
-  final LatLng? currentUserLocation;
 
   final GoogleMapController? mapController;
+
   final ValueChanged<GoogleMapController> setMapController;
 
   final MapType mapType;
@@ -36,6 +36,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final int defaultMapTake;
 
   final ValueReturnChanged<String> markerLabelFormatter;
+
   final PageController pageViewController;
 
   final Future<BitmapDescriptor>? markerBitMap;
@@ -43,6 +44,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final OnItemsChanged<T> onItemsChanged;
 
   final String? selectedItemId;
+
   final ValueChanged<String?> onSelectedItemChanged;
 
   final ItemsWidgetBuilder<T> pageViewItemBuilder;
@@ -60,7 +62,6 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     required this.initialCameraPosition,
     required this.mapController,
     required this.setMapController,
-    required this.currentUserLocation,
     required this.pageViewController,
     required this.onItemsChanged,
     required this.markerLabelFormatter,
@@ -112,70 +113,10 @@ class _PaginationMapState<T extends MarkerItem>
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: [
-          buildGoogleMap(context),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              MapZoomController(
-                mapController: widget.mapController,
-                onZoomInClick: _onZoomClick,
-                onZoomOutClick: _onZoomClick,
-              ),
-              Visibility(
-                // visible: _items.isNotEmpty && _selectedItemId != null,
-                visible: !_canUpdateMap,
-                child: SizedBox(
-                  height: _height,
-                  child: PageView.builder(
-                    controller: widget.pageViewController,
-                    onPageChanged: _onItemChanged,
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _items.results.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return OverflowBox(
-                        /// needed, so that parent won't impose its constraints on the children,
-                        /// thus skewing the measurement results.
-                        minHeight: 0,
-                        maxHeight: double.infinity,
-                        alignment: Alignment.topCenter,
-                        child: SizeReportingWidget(
-                          onSizeChange: (size) {
-                            setState(() {
-                              _height = size?.height;
-                            });
-                            if (kDebugMode) {
-                              log("Pagination map ${widget.initialHeight} - $size");
-                            }
-                          },
-                          child: widget.pageViewItemBuilder(
-                              context, _items.results[index], index),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-              MapPaginationController(
-                skip: skip,
-                take: widget.defaultMapTake,
-                count: _items.count,
-                isLoading: _isLoading,
-                noItemFoundText: widget.noItemFoundText,
-                controllerColor: widget.controllerColor,
-                backgroundColor: widget.backgroundColor,
-                textColor: widget.textColor,
-                onNextPressed: _onSkipChange,
-                onPreviousPressed: _onSkipChange,
-                controllerTextStyle: widget.controllerTextStyle,
-              ),
-            ],
-          ),
-        ],
-      ),
+    return Stack(
+      children: [
+        _buildGoogleMap(context),
+      ],
     );
   }
 
@@ -209,7 +150,7 @@ class _PaginationMapState<T extends MarkerItem>
     _updateMarkers();
   }
 
-  Widget buildGoogleMap(BuildContext context) {
+  Widget _buildGoogleMap(BuildContext context) {
     return GoogleMap(
       myLocationButtonEnabled: false,
       indoorViewEnabled: false,
