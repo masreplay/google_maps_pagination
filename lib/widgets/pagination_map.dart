@@ -1,18 +1,13 @@
 import 'dart:async';
-import 'dart:developer';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_pagination/callbacks/callbacks.dart';
 import 'package:google_maps_pagination/enums/pagination_state.dart';
 import 'package:google_maps_pagination/models/marker_item.dart';
 import 'package:google_maps_pagination/models/pagination.dart';
-import 'package:google_maps_pagination/widgets/map_zoom_controller.dart';
-import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
 
 import '../makers/marker.dart';
-import 'map_pagination_controller.dart';
 
 class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final CameraPosition initialCameraPosition;
@@ -93,22 +88,17 @@ class _PaginationMapState<T extends MarkerItem>
   int skip = 0;
   Pagination<T> _items = Pagination.empty();
 
-  bool _isLoading = false;
-
   CameraPosition? _cameraPosition;
   Timer? _debounceTimer;
   PaginationState _paginationState = PaginationState.preparing;
 
   bool _canUpdateMap = true;
 
-  double? _height;
-
   bool get isItemSelected => widget.selectedItemId != null;
 
   @override
   void initState() {
     super.initState();
-    _height = widget.initialHeight;
   }
 
   @override
@@ -120,35 +110,7 @@ class _PaginationMapState<T extends MarkerItem>
     );
   }
 
-  Future<void> _onSkipChange(int skip) async {
-    _canUpdateMap = true;
-    widget.onSelectedItemChanged(null);
-    setState(() {
-      this.skip = skip;
-      _isLoading = true;
-    });
-    await searchByCameraLocation();
-    setState(() {
-      _isLoading = false;
-    });
-  }
 
-  Future<void> _onItemChanged(int index) async {
-    final item = _items.results[index];
-    _canUpdateMap = false;
-    _selectedItemId = item.id;
-    widget.onSelectedItemChanged(item.id);
-
-    widget.mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: item.location,
-          zoom: 16,
-        ),
-      ),
-    );
-    _updateMarkers();
-  }
 
   Widget _buildGoogleMap(BuildContext context) {
     return GoogleMap(
@@ -266,11 +228,4 @@ class _PaginationMapState<T extends MarkerItem>
     });
   }
 
-  void _onZoomClick() {
-    skip = 0;
-    widget.onSelectedItemChanged(null);
-    setState(() {
-      _canUpdateMap = true;
-    });
-  }
 }
