@@ -52,6 +52,12 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final Set<Circle> circles;
 
+  final bool zoomGesturesEnabled;
+
+  final bool rotateGesturesEnabled;
+
+  final bool scrollGesturesEnabled;
+
   /// Default pageView items height
   /// because horizontal pageView cannot auto measure it's items height
   final double initialHeight;
@@ -82,6 +88,9 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.polygons = const {},
     this.circles = const {},
     this.polylines = const {},
+    this.zoomGesturesEnabled = true,
+    this.rotateGesturesEnabled = true,
+    this.scrollGesturesEnabled = true,
   }) : super(key: key);
 
   @override
@@ -232,6 +241,9 @@ class _PaginationMapState<T extends MarkerItem>
       minMaxZoomPreference: const MinMaxZoomPreference(6, null),
       markers: Set.from(markers),
       mapType: widget.mapType,
+      zoomGesturesEnabled: widget.zoomGesturesEnabled,
+      rotateGesturesEnabled: widget.rotateGesturesEnabled,
+      scrollGesturesEnabled: widget.scrollGesturesEnabled,
       onMapCreated: (GoogleMapController controller) async {
         widget.setMapController(controller);
 

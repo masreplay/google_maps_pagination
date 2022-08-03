@@ -48,12 +48,12 @@ class _MyAppState extends State<MyApp> {
           initialCameraPosition: MyApp.initialCameraPosition,
           mapController: _mapController,
           initialHeight: 100,
+          pageViewController: _pageController,
           setMapController: (value) {
             setState(() {
               _mapController = value;
             });
           },
-          pageViewController: _pageController,
           onItemsChanged: (skip, cameraPosition) {
             return getFakeItems(skip, cameraPosition);
           },
