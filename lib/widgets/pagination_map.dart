@@ -35,6 +35,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final int defaultMapTake;
 
   final ValueReturnChanged<String> markerLabelFormatter;
+
   final PageController pageViewController;
 
   final Future<BitmapDescriptor>? markerBitMap;
@@ -53,6 +54,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final Set<Circle> circles;
 
   final bool zoomGesturesEnabled;
+
+  final double? itemScrollZoom;
 
   final bool rotateGesturesEnabled;
 
@@ -91,6 +94,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.zoomGesturesEnabled = true,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
+    this.itemScrollZoom = 16,
   }) : super(key: key);
 
   @override
@@ -213,10 +217,14 @@ class _PaginationMapState<T extends MarkerItem>
 
     widget.mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: item.location,
-          zoom: 16,
-        ),
+        widget.itemScrollZoom == null
+            ? CameraPosition(
+                target: item.location,
+              )
+            : CameraPosition(
+                target: item.location,
+                zoom: widget.itemScrollZoom!,
+              ),
       ),
     );
     _updateMarkers();
