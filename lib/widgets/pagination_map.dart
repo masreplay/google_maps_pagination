@@ -53,9 +53,11 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final Set<Circle> circles;
 
+  final double? itemScrollZoom;
+
   final bool zoomGesturesEnabled;
 
-  final double? itemScrollZoom;
+  final bool zoomControlsEnabled;
 
   final bool rotateGesturesEnabled;
 
@@ -91,6 +93,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.polygons = const {},
     this.circles = const {},
     this.polylines = const {},
+    this.zoomControlsEnabled = true,
     this.zoomGesturesEnabled = true,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
@@ -137,11 +140,12 @@ class _PaginationMapState<T extends MarkerItem>
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              MapZoomController(
-                mapController: widget.mapController,
-                onZoomInClick: _onZoomClick,
-                onZoomOutClick: _onZoomClick,
-              ),
+              if (widget.zoomControlsEnabled)
+                MapZoomController(
+                  mapController: widget.mapController,
+                  onZoomInClick: _onZoomClick,
+                  onZoomOutClick: _onZoomClick,
+                ),
               Visibility(
                 // visible: _items.isNotEmpty && _selectedItemId != null,
                 visible: !_canUpdateMap,
