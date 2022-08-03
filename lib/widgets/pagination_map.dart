@@ -46,7 +46,11 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final ItemsWidgetBuilder<T> pageViewItemBuilder;
 
+  final Set<Polyline> polylines;
+
   final Set<Polygon> polygons;
+
+  final Set<Circle> circles;
 
   /// Default pageView items height
   /// because horizontal pageView cannot auto measure it's items height
@@ -76,6 +80,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.textColor = Colors.black,
     this.controllerTextStyle,
     this.polygons = const {},
+    this.circles = const {},
+    this.polylines = const {},
   }) : super(key: key);
 
   @override
@@ -113,7 +119,7 @@ class _PaginationMapState<T extends MarkerItem>
     return SafeArea(
       child: Stack(
         children: [
-          buildGoogleMap(context),
+          _buildGoogleMap(context),
           Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,7 +213,7 @@ class _PaginationMapState<T extends MarkerItem>
     _updateMarkers();
   }
 
-  Widget buildGoogleMap(BuildContext context) {
+  Widget _buildGoogleMap(BuildContext context) {
     return GoogleMap(
       myLocationButtonEnabled: false,
       indoorViewEnabled: false,
@@ -259,6 +265,8 @@ class _PaginationMapState<T extends MarkerItem>
       },
       gestureRecognizers: const {},
       polygons: widget.polygons,
+      circles: widget.circles,
+      polylines: widget.polylines,
     );
   }
 
