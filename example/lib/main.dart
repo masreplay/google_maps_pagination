@@ -11,16 +11,16 @@ void main() {
 
 class RealEstate extends MarkerItem {
   final int age;
-  RealEstate({
-    required super.lng,
-    required super.id,
-    required super.lat,
-    required super.label,
-    required this.age,
-  });
 
   @override
-  LatLng get location => LatLng(lng!, lat!);
+  final LatLng location;
+
+  RealEstate({
+    required super.id,
+    required super.label,
+    required this.age,
+    required this.location,
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -47,6 +47,7 @@ class _MyAppState extends State<MyApp> {
         body: PaginationMap<RealEstate>(
           initialCameraPosition: MyApp.initialCameraPosition,
           mapController: _mapController,
+          initialHeight: 100,
           setMapController: (value) {
             setState(() {
               _mapController = value;
@@ -105,36 +106,31 @@ Future<Pagination<RealEstate>> getFakeItems(
   final items = [
     RealEstate(
       id: "1",
-      lng: 12,
-      lat: 12,
+      location: const LatLng(33.40321407949425, 44.37569438560405),
       label: "100\$",
       age: 10,
     ),
     RealEstate(
       id: "2",
-      lng: 12.1,
-      lat: 12.4,
+      location: const LatLng(33.40321407949425, 44.37569438560405),
       label: "140\$",
       age: 40,
     ),
     RealEstate(
       id: "3",
-      lng: 12.1,
-      lat: 12.4,
+      location: const LatLng(33.40321407949425, 44.37569438560405),
       label: "340\$",
       age: 15,
     ),
     RealEstate(
       id: "4",
-      lng: 12.1,
-      lat: 12.2,
+      location: const LatLng(33.40321407949425, 44.37569438560405),
       label: "10\$",
       age: 20,
     ),
     RealEstate(
       id: "5",
-      lng: 12.3,
-      lat: 12,
+      location: const LatLng(33.40321407949425, 44.37569438560405),
       label: "190\$",
       age: 3,
     ),

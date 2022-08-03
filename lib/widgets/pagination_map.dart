@@ -1,19 +1,23 @@
 import 'dart:async';
+import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_pagination/callbacks/callbacks.dart';
 import 'package:google_maps_pagination/enums/pagination_state.dart';
 import 'package:google_maps_pagination/models/marker_item.dart';
 import 'package:google_maps_pagination/models/pagination.dart';
+import 'package:google_maps_pagination/widgets/map_zoom_controller.dart';
+import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
 
 import '../makers/marker.dart';
+import 'map_pagination_controller.dart';
 
 class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final CameraPosition initialCameraPosition;
 
   final GoogleMapController? mapController;
-
   final ValueChanged<GoogleMapController> setMapController;
 
   final MapType mapType;
@@ -31,7 +35,6 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final int defaultMapTake;
 
   final ValueReturnChanged<String> markerLabelFormatter;
-
   final PageController pageViewController;
 
   final Future<BitmapDescriptor>? markerBitMap;
@@ -39,7 +42,6 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final OnItemsChanged<T> onItemsChanged;
 
   final String? selectedItemId;
-
   final ValueChanged<String?> onSelectedItemChanged;
 
   final ItemsWidgetBuilder<T> pageViewItemBuilder;
@@ -88,31 +90,124 @@ class _PaginationMapState<T extends MarkerItem>
   int skip = 0;
   Pagination<T> _items = Pagination.empty();
 
+  bool _isLoading = false;
+
   CameraPosition? _cameraPosition;
   Timer? _debounceTimer;
   PaginationState _paginationState = PaginationState.preparing;
 
   bool _canUpdateMap = true;
 
+  double? _height;
+
   bool get isItemSelected => widget.selectedItemId != null;
 
   @override
   void initState() {
     super.initState();
+    _height = widget.initialHeight;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        _buildGoogleMap(context),
-      ],
+    return SafeArea(
+      child: Stack(
+        children: [
+          buildGoogleMap(context),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              MapZoomController(
+                mapController: widget.mapController,
+                onZoomInClick: _onZoomClick,
+                onZoomOutClick: _onZoomClick,
+              ),
+              Visibility(
+                // visible: _items.isNotEmpty && _selectedItemId != null,
+                visible: !_canUpdateMap,
+                child: SizedBox(
+                  height: _height,
+                  child: PageView.builder(
+                    controller: widget.pageViewController,
+                    onPageChanged: _onItemChanged,
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _items.results.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return OverflowBox(
+                        /// needed, so that parent won't impose its constraints on the children,
+                        /// thus skewing the measurement results.
+                        minHeight: 0,
+                        maxHeight: double.infinity,
+                        alignment: Alignment.topCenter,
+                        child: SizeReportingWidget(
+                          onSizeChange: (size) {
+                            setState(() {
+                              _height = size?.height;
+                            });
+                            if (kDebugMode) {
+                              log("Pagination map ${widget.initialHeight} - $size");
+                            }
+                          },
+                          child: widget.pageViewItemBuilder(
+                              context, _items.results[index], index),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              MapPaginationController(
+                skip: skip,
+                take: widget.defaultMapTake,
+                count: _items.count,
+                isLoading: _isLoading,
+                noItemFoundText: widget.noItemFoundText,
+                controllerColor: widget.controllerColor,
+                backgroundColor: widget.backgroundColor,
+                textColor: widget.textColor,
+                onNextPressed: _onSkipChange,
+                onPreviousPressed: _onSkipChange,
+                controllerTextStyle: widget.controllerTextStyle,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
+  Future<void> _onSkipChange(int skip) async {
+    _canUpdateMap = true;
+    widget.onSelectedItemChanged(null);
+    setState(() {
+      this.skip = skip;
+      _isLoading = true;
+    });
+    await searchByCameraLocation();
+    setState(() {
+      _isLoading = false;
+    });
+  }
 
+  Future<void> _onItemChanged(int index) async {
+    final item = _items.results[index];
+    _canUpdateMap = false;
+    _selectedItemId = item.id;
+    widget.onSelectedItemChanged(item.id);
 
-  Widget _buildGoogleMap(BuildContext context) {
+    widget.mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: item.location,
+          zoom: 16,
+        ),
+      ),
+    );
+    _updateMarkers();
+  }
+
+  Widget buildGoogleMap(BuildContext context) {
     return GoogleMap(
       myLocationButtonEnabled: false,
       indoorViewEnabled: false,
@@ -228,4 +323,11 @@ class _PaginationMapState<T extends MarkerItem>
     });
   }
 
+  void _onZoomClick() {
+    skip = 0;
+    widget.onSelectedItemChanged(null);
+    setState(() {
+      _canUpdateMap = true;
+    });
+  }
 }
