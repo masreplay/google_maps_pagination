@@ -155,6 +155,7 @@ class _PaginationMapState<T extends MarkerItem>
                     controller: widget.pageViewController,
                     onPageChanged: _onItemChanged,
                     scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
                     itemCount: _items.results.length,
                     itemBuilder: (BuildContext context, int index) {
                       return OverflowBox(
