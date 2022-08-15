@@ -18,6 +18,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final CameraPosition initialCameraPosition;
 
   final GoogleMapController? mapController;
+
   final ValueChanged<GoogleMapController> setMapController;
 
   final MapType mapType;
@@ -43,9 +44,10 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final OnItemsChanged<T> onItemsChanged;
 
   final String? selectedItemId;
+
   final ValueChanged<String?> onSelectedItemChanged;
 
-  final ItemsWidgetBuilder<T> pageViewItemBuilder;
+  final ItemsWidgetBuilder<T> itemBuilder;
 
   final Set<Polyline> polylines;
 
@@ -69,6 +71,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final Duration nextRequestDuration;
 
+  final MinMaxZoomPreference minMaxZoomPreference;
+
   const PaginationMap({
     Key? key,
     required this.initialCameraPosition,
@@ -79,7 +83,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     required this.markerLabelFormatter,
     required this.selectedItemId,
     required this.onSelectedItemChanged,
-    required this.pageViewItemBuilder,
+    required this.itemBuilder,
+    this.minMaxZoomPreference = const MinMaxZoomPreference(6, null),
     this.initialHeight = 100,
     this.mapType = MapType.normal,
     this.markerBitMap,
@@ -173,7 +178,7 @@ class _PaginationMapState<T extends MarkerItem>
                               log("Pagination map ${widget.initialHeight} - $size");
                             }
                           },
-                          child: widget.pageViewItemBuilder(
+                          child: widget.itemBuilder(
                               context, _items.results[index], index),
                         ),
                       );
@@ -183,7 +188,7 @@ class _PaginationMapState<T extends MarkerItem>
               ),
               MapPaginationController(
                 skip: skip,
-                take: widget.defaultMapTake,
+                limit: widget.defaultMapTake,
                 count: _items.count,
                 isLoading: _isLoading,
                 noItemFoundText: widget.noItemFoundText,
@@ -245,53 +250,22 @@ class _PaginationMapState<T extends MarkerItem>
       myLocationEnabled: true,
       zoomControlsEnabled: false,
       tiltGesturesEnabled: false,
-      onTap: (_) {
-        _canUpdateMap = true;
-        _selectedItemId = null;
-        _updateMarkers();
-      },
       initialCameraPosition: widget.initialCameraPosition,
-      minMaxZoomPreference: const MinMaxZoomPreference(6, null),
+      minMaxZoomPreference: widget.minMaxZoomPreference,
       markers: Set.from(markers),
       mapType: widget.mapType,
       zoomGesturesEnabled: widget.zoomGesturesEnabled,
       rotateGesturesEnabled: widget.rotateGesturesEnabled,
       scrollGesturesEnabled: widget.scrollGesturesEnabled,
-      onMapCreated: (GoogleMapController controller) async {
-        widget.setMapController(controller);
-
-        _paginationState = PaginationState.idle;
-
-        _cameraPosition = widget.initialCameraPosition;
-        searchByCameraLocation();
-
-        setState(() {});
-      },
-      onCameraIdle: () {
-        if (_paginationState == PaginationState.dragging) {
-          if (_debounceTimer?.isActive ?? false) {
-            _debounceTimer!.cancel();
-          }
-          _debounceTimer = Timer(widget.nextRequestDuration, () {
-            skip = 0;
-            searchByCameraLocation();
-          });
-        }
-
-        _paginationState = PaginationState.idle;
-      },
-      onCameraMoveStarted: () {
-        _debounceTimer?.cancel();
-
-        _paginationState = PaginationState.dragging;
-      },
-      onCameraMove: (CameraPosition position) {
-        _cameraPosition = position;
-      },
       gestureRecognizers: const {},
       polygons: widget.polygons,
       circles: widget.circles,
       polylines: widget.polylines,
+      onTap: _onMapTap,
+      onMapCreated: _onMapCreated,
+      onCameraIdle: _onCameraIdle,
+      onCameraMove: _onCameraMove,
+      onCameraMoveStarted: _onCameraMoveStarted,
     );
   }
 
@@ -319,10 +293,10 @@ class _PaginationMapState<T extends MarkerItem>
     _canUpdateMap = false;
     if (_selectedItemId == null) {
       // the pageView is currently invisible
+
       setState(() {
         _selectedItemId = item.id;
       });
-      await Future.delayed(const Duration(milliseconds: 100));
     }
     _selectedItemId = item.id;
 
@@ -362,5 +336,46 @@ class _PaginationMapState<T extends MarkerItem>
     setState(() {
       _canUpdateMap = true;
     });
+  }
+
+  void _onCameraMove(CameraPosition position) {
+    _cameraPosition = position;
+  }
+
+  void _onCameraMoveStarted() {
+    _debounceTimer?.cancel();
+
+    _paginationState = PaginationState.dragging;
+  }
+
+  void _onCameraIdle() {
+    if (_paginationState == PaginationState.dragging) {
+      if (_debounceTimer?.isActive ?? false) {
+        _debounceTimer!.cancel();
+      }
+      _debounceTimer = Timer(widget.nextRequestDuration, () {
+        skip = 0;
+        searchByCameraLocation();
+      });
+    }
+
+    _paginationState = PaginationState.idle;
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    widget.setMapController(controller);
+
+    _paginationState = PaginationState.idle;
+
+    _cameraPosition = widget.initialCameraPosition;
+    searchByCameraLocation();
+
+    setState(() {});
+  }
+
+  void _onMapTap(LatLng argument) {
+    _canUpdateMap = true;
+    _selectedItemId = null;
+    _updateMarkers();
   }
 }

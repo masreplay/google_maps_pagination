@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 class MapPaginationController extends StatelessWidget {
@@ -13,7 +15,7 @@ class MapPaginationController extends StatelessWidget {
 
   final bool isLoading;
 
-  final int take;
+  final int limit;
 
   final int count;
 
@@ -26,7 +28,7 @@ class MapPaginationController extends StatelessWidget {
   const MapPaginationController({
     Key? key,
     required this.skip,
-    required this.take,
+    required this.limit,
     required this.count,
     required this.isLoading,
     required this.onNextPressed,
@@ -39,16 +41,18 @@ class MapPaginationController extends StatelessWidget {
   }) : super(key: key);
 
   int get _nextSkip {
-    return skip + take;
+    return skip + limit;
   }
 
   int get _previousSkip {
-    return skip - take;
+    return skip - limit;
   }
 
   String get _nextButtonTitle {
     if (_nextSkip < count) {
-      return "${skip + take + 1} - ${skip + (take * 2)}";
+      return "${skip + 1} - $count";
+    } else if (_nextSkip == count) {
+      return "${skip + limit + 1} - ${skip + (limit * 2)}";
     } else {
       return "";
     }
@@ -63,7 +67,7 @@ class MapPaginationController extends StatelessWidget {
       return noItemFoundText;
     } else if (_nextSkip < count) {
       return "${skip + 1} - $_nextSkip";
-    } else if (_nextSkip > count) {
+    } else if (_nextSkip >= count) {
       return "${skip + 1} - $count";
     } else {
       return noItemFoundText;
@@ -79,7 +83,10 @@ class MapPaginationController extends StatelessWidget {
         children: [
           TextButton.icon(
             onPressed: skip != 0 && !isLoading
-                ? () => onPreviousPressed(_previousSkip)
+                ? () {
+                    onPreviousPressed(_previousSkip);
+                    debug();
+                  }
                 : null,
             style: TextButton.styleFrom(primary: controllerColor),
             icon: Icon(
@@ -112,6 +119,7 @@ class MapPaginationController extends StatelessWidget {
             onPressed: _nextSkip < count && !isLoading
                 ? () {
                     onNextPressed(_nextSkip);
+                    debug();
                   }
                 : null,
             style: TextButton.styleFrom(primary: controllerColor),
@@ -132,5 +140,15 @@ class MapPaginationController extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void debug() {
+    log("""skip = $skip,
+limit = $limit,
+_nextSkip = $_nextSkip,
+_previousSkip = $_previousSkip,
+_nextButtonTitle = $_nextButtonTitle,
+_previousButtonTitle = $_previousButtonTitle,
+""");
   }
 }
