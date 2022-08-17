@@ -142,8 +142,8 @@ class _PaginationMapState<T extends MarkerItem>
                   onZoomInPressed: _onZoomClick,
                   onZoomOutPressed: _onZoomClick,
                 ),
+              // visible: _items.isNotEmpty && _selectedItemId != null,
               Visibility(
-                // visible: _items.isNotEmpty && _selectedItemId != null,
                 visible: !_canUpdateMap,
                 child: SizedBox(
                   height: _height,
@@ -194,9 +194,15 @@ class _PaginationMapState<T extends MarkerItem>
     );
   }
 
+  void onSelectedItemChanged(String? id) {
+    _selectedItemId = id;
+    setState(() {});
+    widget.onSelectedItemChanged(id);
+  }
+
   Future<void> _onSkipChange(int skip) async {
     _canUpdateMap = true;
-    widget.onSelectedItemChanged(null);
+    onSelectedItemChanged(null);
     setState(() {
       this.skip = skip;
       _isLoading = true;
@@ -211,7 +217,7 @@ class _PaginationMapState<T extends MarkerItem>
     final item = _items.results[index];
     _canUpdateMap = false;
     _selectedItemId = item.id;
-    widget.onSelectedItemChanged(item.id);
+    onSelectedItemChanged(item.id);
 
     widget.mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
@@ -276,18 +282,16 @@ class _PaginationMapState<T extends MarkerItem>
     );
   }
 
-  void _onMarkerTapped(int index) async {
+  void _onMarkerPressed(int index) async {
     final item = _items.results[index];
     _canUpdateMap = false;
-    if (_selectedItemId == null) {
-      // the pageView is currently invisible
 
-      setState(() {
-        _selectedItemId = item.id;
-      });
-    }
+    setState(() {
+      _selectedItemId = item.id;
+    });
+
     _selectedItemId = item.id;
-
+    await Future.delayed(const Duration(milliseconds: 100));
     widget.pageViewController.jumpToPage(index);
     _updateMarkers();
   }
@@ -307,7 +311,7 @@ class _PaginationMapState<T extends MarkerItem>
         position: currentElement.location,
         icon: markerIcon,
         zIndex: isSelected ? 1 : 0,
-        onTap: () => _onMarkerTapped(i),
+        onTap: () => _onMarkerPressed(i),
       );
 
       _markers.add(marker);
@@ -320,7 +324,7 @@ class _PaginationMapState<T extends MarkerItem>
 
   void _onZoomClick() {
     skip = 0;
-    widget.onSelectedItemChanged(null);
+    onSelectedItemChanged(null);
     setState(() {
       _canUpdateMap = true;
     });
