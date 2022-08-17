@@ -114,7 +114,7 @@ class _PaginationMapState<T extends MarkerItem>
   Timer? _debounceTimer;
   PaginationState _paginationState = PaginationState.preparing;
 
-  bool _canUpdateMap = true;
+  bool _canSendRequest = true;
 
   double? _height;
 
@@ -144,7 +144,7 @@ class _PaginationMapState<T extends MarkerItem>
                 ),
               // visible: _items.isNotEmpty && _selectedItemId != null,
               Visibility(
-                visible: !_canUpdateMap,
+                visible: !_canSendRequest,
                 child: SizedBox(
                   height: _height,
                   child: PageView.builder(
@@ -201,7 +201,7 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   Future<void> _onSkipChange(int skip) async {
-    _canUpdateMap = true;
+    _canSendRequest = true;
     onSelectedItemChanged(null);
     setState(() {
       this.skip = skip;
@@ -215,16 +215,14 @@ class _PaginationMapState<T extends MarkerItem>
 
   Future<void> _onItemChanged(int index) async {
     final item = _items.results[index];
-    _canUpdateMap = false;
+    _canSendRequest = false;
     _selectedItemId = item.id;
     onSelectedItemChanged(item.id);
 
     widget.mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         widget.itemScrollZoom == null
-            ? CameraPosition(
-                target: item.location,
-              )
+            ? CameraPosition(target: item.location)
             : CameraPosition(
                 target: item.location,
                 zoom: widget.itemScrollZoom!,
@@ -264,7 +262,7 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   Future searchByCameraLocation() async {
-    if (_cameraPosition != null && _canUpdateMap) {
+    if (_cameraPosition != null && _canSendRequest) {
       _items = await widget.onItemsChanged(skip, _cameraPosition!);
       _updateMarkers();
     }
@@ -284,7 +282,7 @@ class _PaginationMapState<T extends MarkerItem>
 
   void _onMarkerPressed(int index) async {
     final item = _items.results[index];
-    _canUpdateMap = false;
+    _canSendRequest = false;
 
     setState(() {
       _selectedItemId = item.id;
@@ -326,7 +324,7 @@ class _PaginationMapState<T extends MarkerItem>
     skip = 0;
     onSelectedItemChanged(null);
     setState(() {
-      _canUpdateMap = true;
+      _canSendRequest = true;
     });
   }
 
@@ -366,7 +364,7 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   void _onMapTap(LatLng argument) {
-    _canUpdateMap = true;
+    _canSendRequest = true;
     _selectedItemId = null;
     _updateMarkers();
   }
