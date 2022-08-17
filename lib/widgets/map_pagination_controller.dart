@@ -1,15 +1,25 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 
-class MapPaginationController extends StatelessWidget {
-  final int skip;
-
+@immutable
+class MapPaginationControllerTheme {
   final Color controllerColor;
 
   final Color textColor;
 
   final Color backgroundColor;
+
+  final TextStyle? textStyle;
+
+  const MapPaginationControllerTheme({
+    required this.controllerColor,
+    required this.backgroundColor,
+    required this.textColor,
+    this.textStyle,
+  });
+}
+
+class MapPaginationController extends StatelessWidget {
+  final int skip;
 
   final String noItemFoundText;
 
@@ -17,9 +27,9 @@ class MapPaginationController extends StatelessWidget {
 
   final int limit;
 
-  final int count;
+  final MapPaginationControllerTheme theme;
 
-  final TextStyle? controllerTextStyle;
+  final int count;
 
   final ValueChanged<int> onNextPressed;
 
@@ -34,10 +44,7 @@ class MapPaginationController extends StatelessWidget {
     required this.onNextPressed,
     required this.onPreviousPressed,
     required this.noItemFoundText,
-    required this.controllerTextStyle,
-    required this.controllerColor,
-    required this.backgroundColor,
-    required this.textColor,
+    required this.theme,
   }) : super(key: key);
 
   int get _nextSkip {
@@ -76,8 +83,13 @@ class MapPaginationController extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final arrowButtonsTextTheme = theme.textStyle ??
+        textTheme.subtitle2?.copyWith(color: theme.textColor);
+
     return Container(
-      color: backgroundColor,
+      color: theme.backgroundColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -85,22 +97,17 @@ class MapPaginationController extends StatelessWidget {
             onPressed: skip != 0 && !isLoading
                 ? () {
                     onPreviousPressed(_previousSkip);
-                    debug();
                   }
                 : null,
-            style: TextButton.styleFrom(primary: controllerColor),
+            style: TextButton.styleFrom(primary: theme.controllerColor),
             icon: Icon(
               Icons.arrow_back_ios_rounded,
-              color: controllerColor,
+              color: theme.controllerColor,
               size: 16,
             ),
             label: Text(
               _previousButtonTitle,
-              style: controllerTextStyle ??
-                  Theme.of(context)
-                      .textTheme
-                      .subtitle2
-                      ?.copyWith(color: textColor),
+              style: arrowButtonsTextTheme,
             ),
           ),
           Visibility(
@@ -108,47 +115,32 @@ class MapPaginationController extends StatelessWidget {
             replacement: const CircularProgressIndicator(),
             child: Text(
               _middleTitle(context),
-              style: controllerTextStyle ??
-                  Theme.of(context).textTheme.subtitle2?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
+              style: theme.textStyle ??
+                  textTheme.subtitle2?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.textColor,
+                  ),
             ),
           ),
           TextButton.icon(
             onPressed: _nextSkip < count && !isLoading
                 ? () {
                     onNextPressed(_nextSkip);
-                    debug();
                   }
                 : null,
-            style: TextButton.styleFrom(primary: controllerColor),
+            style: TextButton.styleFrom(primary: theme.controllerColor),
             icon: Text(
               _nextButtonTitle,
-              style: controllerTextStyle ??
-                  Theme.of(context)
-                      .textTheme
-                      .subtitle2
-                      ?.copyWith(color: textColor),
+              style: arrowButtonsTextTheme,
             ),
             label: Icon(
               Icons.arrow_forward_ios_rounded,
-              color: controllerColor,
+              color: theme.controllerColor,
               size: 16,
             ),
           ),
         ],
       ),
     );
-  }
-
-  void debug() {
-    log("""skip = $skip,
-limit = $limit,
-_nextSkip = $_nextSkip,
-_previousSkip = $_previousSkip,
-_nextButtonTitle = $_nextButtonTitle,
-_previousButtonTitle = $_previousButtonTitle,
-""");
   }
 }

@@ -5,12 +5,13 @@ class MapZoomController extends StatelessWidget {
   const MapZoomController({
     Key? key,
     this.mapController,
-    this.onZoomInClick,
-    this.onZoomOutClick,
+    required this.onZoomInPressed,
+    required this.onZoomOutPressed,
   }) : super(key: key);
+
   final GoogleMapController? mapController;
-  final VoidCallback? onZoomInClick;
-  final VoidCallback? onZoomOutClick;
+  final VoidCallback onZoomInPressed;
+  final VoidCallback onZoomOutPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +28,16 @@ class MapZoomController extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: () {
+                onZoomInPressed();
                 mapController?.animateCamera(CameraUpdate.zoomIn());
-                onZoomInClick?.call();
               },
             ),
             const SizedBox(height: 2),
             IconButton(
               icon: const Icon(Icons.remove),
               onPressed: () {
+                onZoomOutPressed();
                 mapController?.animateCamera(CameraUpdate.zoomOut());
-                onZoomOutClick?.call();
               },
             ),
           ],
