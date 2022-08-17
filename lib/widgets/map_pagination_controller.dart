@@ -58,12 +58,13 @@ class MapPaginationController extends StatelessWidget {
   }
 
   debug() {
-    
     log("Hello skip: $skip, _nextSkip: $_nextSkip, count: $count");
   }
 
   String get _nextButtonTitle {
-    if (_nextSkip < count) {
+    if (_nextSkip == count) {
+      return "";
+    } else if (_nextSkip < count) {
       debug();
       return "${skip + limit + 1} - $count";
     } else if (_nextSkip <= count) {
