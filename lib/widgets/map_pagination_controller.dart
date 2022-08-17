@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 @immutable
@@ -55,10 +57,17 @@ class MapPaginationController extends StatelessWidget {
     return skip - limit;
   }
 
+  debug() {
+    
+    log("Hello skip: $skip, _nextSkip: $_nextSkip, count: $count");
+  }
+
   String get _nextButtonTitle {
     if (_nextSkip < count) {
-      return "${skip + 1} - $count";
-    } else if (_nextSkip == count) {
+      debug();
+      return "${skip + limit + 1} - $count";
+    } else if (_nextSkip <= count) {
+      debug();
       return "${skip + limit + 1} - ${skip + (limit * 2)}";
     } else {
       return "";
