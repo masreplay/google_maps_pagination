@@ -203,14 +203,8 @@ class _PaginationMapState<T extends MarkerItem>
   Future<void> _onSkipChange(int skip) async {
     _canSendRequest = true;
     onSelectedItemChanged(null);
-    setState(() {
-      this.skip = skip;
-      _isLoading = true;
-    });
+    this.skip = skip;
     await searchByCameraLocation();
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> _onItemChanged(int index) async {
@@ -262,10 +256,12 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   Future searchByCameraLocation() async {
+    setState(() => _isLoading = true);
     if (_cameraPosition != null && _canSendRequest) {
       _items = await widget.onItemsChanged(skip, _cameraPosition!);
       _updateMarkers();
     }
+    setState(() => _isLoading = false);
   }
 
   Future<BitmapDescriptor> _getMarkerBitMap(
