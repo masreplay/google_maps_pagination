@@ -96,7 +96,7 @@ class MapPaginationController extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     final arrowButtonsTextTheme = theme.textStyle ??
-        textTheme.subtitle2?.copyWith(color: theme.textColor);
+        textTheme.titleSmall?.copyWith(color: theme.textColor);
 
     return Container(
       color: theme.backgroundColor,
@@ -109,7 +109,7 @@ class MapPaginationController extends StatelessWidget {
                     onPreviousPressed(_previousSkip);
                   }
                 : null,
-            style: TextButton.styleFrom(primary: theme.controllerColor),
+            style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
             icon: Icon(
               Icons.arrow_back_ios_rounded,
               color: theme.controllerColor,
@@ -126,7 +126,7 @@ class MapPaginationController extends StatelessWidget {
             child: Text(
               _middleTitle(context),
               style: theme.textStyle ??
-                  textTheme.subtitle2?.copyWith(
+                  textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.textColor,
                   ),
@@ -138,7 +138,7 @@ class MapPaginationController extends StatelessWidget {
                     onNextPressed(_nextSkip);
                   }
                 : null,
-            style: TextButton.styleFrom(primary: theme.controllerColor),
+            style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
             icon: Text(
               _nextButtonTitle,
               style: arrowButtonsTextTheme,
