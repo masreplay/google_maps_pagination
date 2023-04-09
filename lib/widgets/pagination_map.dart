@@ -14,6 +14,15 @@ import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
 import '../makers/marker.dart';
 import 'map_pagination_controller.dart';
 
+extension CameraPositionExtensions on CameraPosition {
+  bool isSame(CameraPosition? other) {
+    return target.latitude.toStringAsFixed(2) ==
+            other?.target.latitude.toStringAsFixed(2) &&
+        target.longitude.toStringAsFixed(2) ==
+            other?.target.longitude.toStringAsFixed(2);
+  }
+}
+
 class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final CameraPosition initialCameraPosition;
 
@@ -67,6 +76,11 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final MinMaxZoomPreference minMaxZoomPreference;
 
+  /// This default behavior of resending the request on camera move will be
+  /// disabled if this flag is set to true, otherwise it will call onItemsChanged
+  /// on every camera move
+  final bool disableCameraUpdateRequest;
+
   const PaginationMap({
     Key? key,
     required this.initialCameraPosition,
@@ -94,6 +108,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
     this.itemScrollZoom = 16,
+    this.disableCameraUpdateRequest = false,
   }) : super(key: key);
 
   @override
@@ -111,6 +126,8 @@ class _PaginationMapState<T extends MarkerItem>
   bool _isLoading = false;
 
   CameraPosition? _cameraPosition;
+  CameraPosition? _oldPosition;
+
   Timer? _debounceTimer;
   PaginationState _paginationState = PaginationState.preparing;
 
@@ -204,6 +221,7 @@ class _PaginationMapState<T extends MarkerItem>
     _canSendRequest = true;
     onSelectedItemChanged(null);
     this.skip = skip;
+    _oldPosition = null;
     await searchByCameraLocation();
   }
 
@@ -256,7 +274,11 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   Future searchByCameraLocation() async {
+    if (widget.disableCameraUpdateRequest &&
+        (_cameraPosition!.isSame(_oldPosition))) return;
+
     setState(() => _isLoading = true);
+    _oldPosition = _cameraPosition;
     if (_cameraPosition != null && _canSendRequest) {
       _items = await widget.onItemsChanged(skip, _cameraPosition!);
       _updateMarkers();
@@ -280,9 +302,7 @@ class _PaginationMapState<T extends MarkerItem>
     final item = _items.results[index];
     _canSendRequest = false;
 
-    setState(() {
-      _selectedItemId = item.id;
-    });
+    setState(() => _selectedItemId = item.id);
 
     _selectedItemId = item.id;
     await Future.delayed(const Duration(milliseconds: 100));
@@ -311,9 +331,7 @@ class _PaginationMapState<T extends MarkerItem>
       _markers.add(marker);
     }
 
-    setState(() {
-      markers = _markers;
-    });
+    setState(() => markers = _markers);
   }
 
   void _onZoomClick() {
@@ -325,7 +343,12 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   void _onCameraMove(CameraPosition position) {
-    _cameraPosition = position;
+    _oldPosition = _cameraPosition;
+
+    if (!widget.disableCameraUpdateRequest) _cameraPosition = position;
+    if (!_cameraPosition!.isSame(widget.initialCameraPosition)) {
+      _cameraPosition = widget.initialCameraPosition;
+    }
   }
 
   void _onCameraMoveStarted() {
@@ -340,7 +363,7 @@ class _PaginationMapState<T extends MarkerItem>
         _debounceTimer!.cancel();
       }
       _debounceTimer = Timer(widget.nextRequestDuration, () {
-        skip = 0;
+        if (!widget.disableCameraUpdateRequest) skip = 0;
         searchByCameraLocation();
       });
     }
@@ -354,6 +377,7 @@ class _PaginationMapState<T extends MarkerItem>
     _paginationState = PaginationState.idle;
 
     _cameraPosition = widget.initialCameraPosition;
+
     searchByCameraLocation();
 
     setState(() {});
