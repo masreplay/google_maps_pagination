@@ -348,6 +348,7 @@ class _PaginationMapState<T extends MarkerItem>
     if (!widget.disableCameraUpdateRequest) _cameraPosition = position;
     if (!_cameraPosition!.isSame(widget.initialCameraPosition)) {
       _cameraPosition = widget.initialCameraPosition;
+      skip = 0;
     }
   }
 
