@@ -105,9 +105,7 @@ class MapPaginationController extends StatelessWidget {
         children: [
           TextButton.icon(
             onPressed: skip != 0 && !isLoading
-                ? () {
-                    onPreviousPressed(_previousSkip);
-                  }
+                ? () => onPreviousPressed(_previousSkip)
                 : null,
             style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
             icon: Icon(
@@ -115,10 +113,7 @@ class MapPaginationController extends StatelessWidget {
               color: theme.controllerColor,
               size: 16,
             ),
-            label: Text(
-              _previousButtonTitle,
-              style: arrowButtonsTextTheme,
-            ),
+            label: Text(_previousButtonTitle, style: arrowButtonsTextTheme),
           ),
           Visibility(
             visible: !isLoading,
@@ -134,15 +129,10 @@ class MapPaginationController extends StatelessWidget {
           ),
           TextButton.icon(
             onPressed: _nextSkip < count && !isLoading
-                ? () {
-                    onNextPressed(_nextSkip);
-                  }
+                ? () => onNextPressed(_nextSkip)
                 : null,
             style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
-            icon: Text(
-              _nextButtonTitle,
-              style: arrowButtonsTextTheme,
-            ),
+            icon: Text(_nextButtonTitle, style: arrowButtonsTextTheme),
             label: Icon(
               Icons.arrow_forward_ios_rounded,
               color: theme.controllerColor,

@@ -29,6 +29,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   final GoogleMapController? mapController;
 
   final ValueChanged<GoogleMapController> setMapController;
+  final ValueChanged<VoidCallback>? setRestCallback;
 
   final MapType mapType;
 
@@ -93,6 +94,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     required this.onSelectedItemChanged,
     required this.itemBuilder,
     required this.controllerTheme,
+    this.setRestCallback,
     this.minMaxZoomPreference = const MinMaxZoomPreference(6, null),
     this.initialHeight = 100,
     this.mapType = MapType.normal,
@@ -179,9 +181,7 @@ class _PaginationMapState<T extends MarkerItem>
                         alignment: Alignment.topCenter,
                         child: SizeReportingWidget(
                           onSizeChange: (size) {
-                            setState(() {
-                              _height = size?.height;
-                            });
+                            setState(() => _height = size?.height);
                             if (kDebugMode) {
                               log("Pagination map ${widget.initialHeight} - $size");
                             }
@@ -211,6 +211,11 @@ class _PaginationMapState<T extends MarkerItem>
     );
   }
 
+  void reset() async {
+    skip = 0;
+    await _sendRequest();
+  }
+
   void onSelectedItemChanged(String? id) {
     _selectedItemId = id;
     setState(() {});
@@ -221,8 +226,7 @@ class _PaginationMapState<T extends MarkerItem>
     _canSendRequest = true;
     onSelectedItemChanged(null);
     this.skip = skip;
-    _oldPosition = null;
-    await searchByCameraLocation();
+    await _sendRequest();
   }
 
   Future<void> _onItemChanged(int index) async {
@@ -276,7 +280,10 @@ class _PaginationMapState<T extends MarkerItem>
   Future searchByCameraLocation() async {
     if (widget.disableCameraUpdateRequest &&
         (_cameraPosition!.isSame(_oldPosition))) return;
+    _sendRequest();
+  }
 
+  Future<void> _sendRequest() async {
     setState(() => _isLoading = true);
     _oldPosition = _cameraPosition;
     if (_cameraPosition != null && _canSendRequest) {
@@ -374,6 +381,7 @@ class _PaginationMapState<T extends MarkerItem>
 
   void _onMapCreated(GoogleMapController controller) {
     widget.setMapController(controller);
+    widget.setRestCallback?.call(reset);
 
     _paginationState = PaginationState.idle;
 
