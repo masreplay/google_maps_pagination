@@ -82,6 +82,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   /// on every camera move
   final bool disableCameraUpdateRequest;
 
+  final VoidCallback? onMiddleTextPressed;
+
   const PaginationMap({
     Key? key,
     required this.initialCameraPosition,
@@ -111,6 +113,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.scrollGesturesEnabled = true,
     this.itemScrollZoom = 16,
     this.disableCameraUpdateRequest = false,
+    this.onMiddleTextPressed,
   }) : super(key: key);
 
   @override
@@ -203,6 +206,7 @@ class _PaginationMapState<T extends MarkerItem>
                 theme: widget.controllerTheme,
                 onNextPressed: _onSkipChange,
                 onPreviousPressed: _onSkipChange,
+                onMiddleTextPressed: widget.onMiddleTextPressed,
               ),
             ],
           ),

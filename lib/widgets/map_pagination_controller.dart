@@ -36,6 +36,7 @@ class MapPaginationController extends StatelessWidget {
   final ValueChanged<int> onNextPressed;
 
   final ValueChanged<int> onPreviousPressed;
+  final VoidCallback? onMiddleTextPressed;
 
   const MapPaginationController({
     Key? key,
@@ -46,6 +47,7 @@ class MapPaginationController extends StatelessWidget {
     required this.onNextPressed,
     required this.onPreviousPressed,
     required this.noItemFoundText,
+    this.onMiddleTextPressed,
     required this.theme,
   }) : super(key: key);
 
@@ -118,13 +120,19 @@ class MapPaginationController extends StatelessWidget {
           Visibility(
             visible: !isLoading,
             replacement: const CircularProgressIndicator(),
-            child: Text(
-              _middleTitle(context),
-              style: theme.textStyle ??
-                  textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.textColor,
-                  ),
+            child: OutlinedButton(
+              onPressed: onMiddleTextPressed,
+              style: OutlinedButton.styleFrom(
+                side: onMiddleTextPressed == null ? BorderSide.none : null,
+              ),
+              child: Text(
+                _middleTitle(context),
+                style: theme.textStyle ??
+                    textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.textColor,
+                    ),
+              ),
             ),
           ),
           TextButton.icon(
