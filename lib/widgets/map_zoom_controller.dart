@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapZoomController extends StatelessWidget {
   const MapZoomController({
     Key? key,
     this.mapController,
+    this.flutterMapController,
     required this.onZoomInPressed,
     required this.onZoomOutPressed,
   }) : super(key: key);
 
   final GoogleMapController? mapController;
+  final MapController? flutterMapController;
+
   final VoidCallback onZoomInPressed;
   final VoidCallback onZoomOutPressed;
 
@@ -30,6 +34,10 @@ class MapZoomController extends StatelessWidget {
               onPressed: () {
                 onZoomInPressed();
                 mapController?.animateCamera(CameraUpdate.zoomIn());
+                flutterMapController?.move(
+                  flutterMapController!.center,
+                  flutterMapController!.zoom + 0.1,
+                );
               },
             ),
             const SizedBox(height: 2),
@@ -38,6 +46,10 @@ class MapZoomController extends StatelessWidget {
               onPressed: () {
                 onZoomOutPressed();
                 mapController?.animateCamera(CameraUpdate.zoomOut());
+                flutterMapController?.move(
+                  flutterMapController!.center,
+                  flutterMapController!.zoom - 0.1,
+                );
               },
             ),
           ],

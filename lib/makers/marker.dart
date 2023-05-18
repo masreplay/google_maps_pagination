@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-Future<BitmapDescriptor> getMarkerBitmap({
+Future<Uint8List> getMarkerUnit8List({
   double? size,
   required String text,
   required Color color,
@@ -77,7 +77,13 @@ Future<BitmapDescriptor> getMarkerBitmap({
       .toImage(width.toInt(), (height + arrowHeight + shadowOffset).toInt());
   final data = await img.toByteData(format: ImageByteFormat.png) as ByteData;
 
-  return BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+  return data.buffer.asUint8List();
+}
+
+extension Uint8ListExtensions on Uint8List {
+  Future<BitmapDescriptor> toBitmapDescriptor() async {
+    return BitmapDescriptor.fromBytes(this);
+  }
 }
 
 extension StringExtension on String {

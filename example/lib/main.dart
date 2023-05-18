@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
 import 'package:google_maps_pagination/google_maps_pagination.dart';
+import 'package:google_maps_pagination/models/camera_event.dart';
 import 'package:google_maps_pagination/models/models.dart';
 
 void main() {
@@ -29,7 +30,7 @@ class RealEstate extends MarkerItem {
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  static const initialCameraPosition = CameraPosition(
+  static final initialCameraPosition = MapCameraEvent(
     target: LatLng(33.31630340525106, 44.44362264328901),
     zoom: 16,
   );
@@ -42,7 +43,7 @@ class _MyAppState extends State<MyApp> {
   final PageController _pageViewController =
       PageController(viewportFraction: 0.9);
 
-  GoogleMapController? _mapController;
+  gmaps.GoogleMapController? _mapController;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +116,7 @@ class ItemListTile extends StatelessWidget {
 // Replace it with your real items request
 Future<Pagination<RealEstate>> getFakeItems(
   int skip,
-  CameraPosition cameraPosition,
+  MapCameraEvent cameraPosition,
 ) async {
   const imageUrl =
       "https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2196&q=80";
@@ -144,7 +145,7 @@ Future<Pagination<RealEstate>> getFakeItems(
   });
 }
 
-const locations = [
+final locations = [
   LatLng(33.312865197724754, 44.44767520560694),
   LatLng(33.31707238155747, 44.44244454008099),
   LatLng(33.30864570869721, 44.44497774410984),

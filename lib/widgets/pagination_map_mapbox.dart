@@ -3,46 +3,44 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_pagination/widgets/pagination_map_mapbox.dart';
-import 'package:latlong2/latlong.dart' as latlong;
-
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:google_maps_pagination/callbacks/callbacks.dart';
 import 'package:google_maps_pagination/enums/pagination_state.dart';
+import 'package:google_maps_pagination/makers/marker.dart';
 import 'package:google_maps_pagination/models/camera_event.dart';
-import 'package:google_maps_pagination/models/marker_item.dart' as marker;
+import 'package:google_maps_pagination/models/marker_item.dart';
 import 'package:google_maps_pagination/models/pagination.dart';
 import 'package:google_maps_pagination/widgets/map_zoom_controller.dart';
 import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
 
-import '../makers/marker.dart';
 import 'map_pagination_controller.dart';
 
-extension CameraPositionExtensions on CameraPosition {
-  bool isSame(CameraPosition? other) {
+class MapConstants {
+  static const String mapBoxAccessToken =
+      'pk.eyJ1IjoiYmlsYWxyYWQiLCJhIjoiY2xocGQ2MHNkMjUzNjNsbnhqN3ExcG5iYiJ9.4CE7XTlx_WnS3zJSYgHDpw';
+
+  static const String mapBoxStyleLink =
+      'https://api.mapbox.com/styles/v1/bilalrad/ckmb04pqdhzg917o4x2i8q46h/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYmlsYWxyYWQiLCJhIjoiY2xocGQ2MHNkMjUzNjNsbnhqN3ExcG5iYiJ9.4CE7XTlx_WnS3zJSYgHDpw';
+
+  static const String mapBoxStyleId = 'ckmb04pqdhzg917o4x2i8q46h';
+}
+
+extension CameraPositionExtensions on MapCameraEvent {
+  bool isSame(MapCameraEvent? other) {
     return target.latitude.toStringAsFixed(2) ==
             other?.target.latitude.toStringAsFixed(2) &&
         target.longitude.toStringAsFixed(2) ==
             other?.target.longitude.toStringAsFixed(2);
   }
-
-  MapCameraEvent toEvent() {
-    return MapCameraEvent(
-      target: latlong.LatLng(target.latitude, target.longitude),
-      zoom: zoom,
-    );
-  }
 }
 
-class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
+class PaginationMapBox<T extends MarkerItem> extends StatefulWidget {
   final MapCameraEvent initialCameraPosition;
 
-  final GoogleMapController? mapController;
+  final MapController? mapController;
 
-  final ValueChanged<GoogleMapController> setMapController;
+  final ValueChanged<MapController> setMapController;
   final ValueChanged<VoidCallback>? setRestCallback;
-
-  final MapType mapType;
 
   final String noItemFoundText;
 
@@ -54,6 +52,8 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
 
   final PageController pageViewController;
 
+  final String? markerImage;
+
   final OnItemsChanged<T> onItemsChanged;
 
   final String? selectedItemId;
@@ -62,11 +62,11 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
 
   final ItemsWidgetBuilder<T> itemBuilder;
 
-  final Set<Polyline> polylines;
+  final List<Polyline> polylines;
 
-  final Set<Polygon> polygons;
+  final List<Polygon> polygons;
 
-  final Set<Circle> circles;
+  final List<CircleMarker> circles;
 
   final double? itemScrollZoom;
 
@@ -84,7 +84,11 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
 
   final Duration nextRequestDuration;
 
-  final MinMaxZoomPreference minMaxZoomPreference;
+  /// The preferred minimum zoom level or null, if unbounded from below.
+  final double? minZoom;
+
+  /// The preferred maximum zoom level or null, if unbounded from above.
+  final double? maxZoom;
 
   /// This default behavior of resending the request on camera move will be
   /// disabled if this flag is set to true, otherwise it will call onItemsChanged
@@ -93,7 +97,7 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
 
   final VoidCallback? onMiddleTextPressed;
 
-  const PaginationMap({
+  const PaginationMapBox({
     Key? key,
     required this.initialCameraPosition,
     required this.mapController,
@@ -106,15 +110,16 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
     required this.itemBuilder,
     required this.controllerTheme,
     this.setRestCallback,
-    this.minMaxZoomPreference = const MinMaxZoomPreference(6, null),
+    this.minZoom = 6,
+    this.maxZoom,
     this.initialHeight = 100,
-    this.mapType = MapType.normal,
+    this.markerImage,
     this.nextRequestDuration = const Duration(milliseconds: 500),
     this.defaultMapTake = 25,
     this.noItemFoundText = "no items found...",
-    this.polygons = const {},
-    this.circles = const {},
-    this.polylines = const {},
+    this.polygons = const [],
+    this.circles = const [],
+    this.polylines = const [],
     this.zoomControlsEnabled = true,
     this.zoomGesturesEnabled = true,
     this.rotateGesturesEnabled = true,
@@ -125,11 +130,11 @@ class PaginationMap<T extends marker.MarkerItem> extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PaginationMap<T>> createState() => _PaginationMapState<T>();
+  State<PaginationMapBox<T>> createState() => _PaginationMapBoxState<T>();
 }
 
-class _PaginationMapState<T extends marker.MarkerItem>
-    extends State<PaginationMap<T>> {
+class _PaginationMapBoxState<T extends MarkerItem>
+    extends State<PaginationMapBox<T>> {
   String? _selectedItemId;
 
   List<Marker> markers = [];
@@ -168,7 +173,7 @@ class _PaginationMapState<T extends marker.MarkerItem>
             children: [
               if (widget.zoomControlsEnabled)
                 MapZoomController(
-                  mapController: widget.mapController,
+                  flutterMapController: widget.mapController,
                   onZoomInPressed: _onZoomClick,
                   onZoomOutPressed: _onZoomClick,
                 ),
@@ -247,45 +252,72 @@ class _PaginationMapState<T extends marker.MarkerItem>
     _selectedItemId = item.id;
     onSelectedItemChanged(item.id);
 
-    widget.mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        widget.itemScrollZoom == null
-            ? CameraPosition(target: item.gmapsLocation)
-            : CameraPosition(
-                target: item.gmapsLocation,
-                zoom: widget.itemScrollZoom!,
-              ),
-      ),
+    widget.mapController?.move(
+      item.location,
+      widget.itemScrollZoom == null
+          ? widget.initialCameraPosition.zoom
+          : widget.itemScrollZoom!,
     );
     _updateMarkers();
   }
 
   Widget _buildGoogleMap(BuildContext context) {
-    return GoogleMap(
-      myLocationButtonEnabled: false,
-      indoorViewEnabled: false,
-      trafficEnabled: false,
-      compassEnabled: false,
-      mapToolbarEnabled: false,
-      myLocationEnabled: true,
-      zoomControlsEnabled: false,
-      tiltGesturesEnabled: false,
-      initialCameraPosition: widget.initialCameraPosition.toCameraPosition(),
-      minMaxZoomPreference: widget.minMaxZoomPreference,
-      markers: Set.from(markers),
-      mapType: widget.mapType,
-      zoomGesturesEnabled: widget.zoomGesturesEnabled,
-      rotateGesturesEnabled: widget.rotateGesturesEnabled,
-      scrollGesturesEnabled: widget.scrollGesturesEnabled,
-      gestureRecognizers: const {},
-      polygons: widget.polygons,
-      circles: widget.circles,
-      polylines: widget.polylines,
-      onTap: _onMapTap,
-      onMapCreated: _onMapCreated,
-      onCameraIdle: _onCameraIdle,
-      onCameraMove: _onCameraMove,
-      onCameraMoveStarted: _onCameraMoveStarted,
+    return FlutterMap(
+      mapController: widget.mapController,
+      options: MapOptions(
+        minZoom: widget.minZoom,
+        maxZoom: widget.maxZoom,
+        center: widget.initialCameraPosition.target,
+        onMapReady: _onMapCreated,
+        onMapEvent: (p0) {
+          print(p0.zoom);
+          print(p0.source);
+        },
+        onLongPress: (tapPosition, point) {
+          print(point);
+        },
+        onPositionChanged: _onCameraMove,
+        onTap: _onMapTap,
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: MapConstants.mapBoxStyleLink,
+          additionalOptions: const {
+            'mapStyleId': MapConstants.mapBoxStyleId,
+            'accessToken': MapConstants.mapBoxAccessToken,
+          },
+        ),
+        PolygonLayer(
+          polygons: widget.polygons,
+        ),
+        PolylineLayer(
+          polylines: widget.polylines,
+        ),
+        CircleLayer(
+          circles: widget.circles,
+        ),
+      ],
+      // myLocationButtonEnabled: false,
+      // indoorViewEnabled: false,
+      // trafficEnabled: false,
+      // compassEnabled: false,
+      // mapToolbarEnabled: false,
+      // myLocationEnabled: true,
+      // zoomControlsEnabled: false,
+      // tiltGesturesEnabled: false,
+      // initialCameraPosition: widget.initialCameraPosition,
+      // minMaxZoomPreference: widget.minMaxZoomPreference,
+      // markers: Set.from(markers),
+      // mapType: widget.mapType,
+      // zoomGesturesEnabled: widget.zoomGesturesEnabled,
+      // rotateGesturesEnabled: widget.rotateGesturesEnabled,
+      // scrollGesturesEnabled: widget.scrollGesturesEnabled,
+      // gestureRecognizers: const {},
+      // polygons: widget.polygons,
+      // circles: widget.circles,
+      // polylines: widget.polylines,
+      // onCameraIdle: _onCameraIdle,
+      // onCameraMoveStarted: _onCameraMoveStarted,
     );
   }
 
@@ -303,19 +335,6 @@ class _PaginationMapState<T extends marker.MarkerItem>
       _updateMarkers();
     }
     setState(() => _isLoading = false);
-  }
-
-  Future<BitmapDescriptor> _getMarkerBitMap(
-    bool isSelected,
-    String label,
-  ) async {
-    return (await getMarkerUnit8List(
-      text: widget.markerLabelFormatter(label),
-      textColor: isSelected ? Colors.black : Colors.white,
-      color:
-          isSelected ? const Color(0xffeaa329) : Theme.of(context).primaryColor,
-    ))
-        .toBitmapDescriptor();
   }
 
   void _onMarkerPressed(int index) async {
@@ -337,12 +356,13 @@ class _PaginationMapState<T extends marker.MarkerItem>
       final currentElement = _items.results[i];
       final isSelected = _selectedItemId == currentElement.id;
 
-      final markerIcon =
-          await _getMarkerBitMap(isSelected, currentElement.label);
+      final markerIcon = await _getMarkerBitMap(
+        isSelected,
+        widget.markerLabelFormatter(currentElement.label),
+      );
 
-      final marker = currentElement.toGmapsMarker(
+      final marker = currentElement.toFmapsMarker(
         markerIcon: markerIcon,
-        zIndex: isSelected ? 1 : 0,
         onTab: () => _onMarkerPressed(i),
       );
 
@@ -350,6 +370,18 @@ class _PaginationMapState<T extends marker.MarkerItem>
     }
 
     setState(() => markers = _markers);
+  }
+
+  Future<Image> _getMarkerBitMap(
+    bool isSelected,
+    String label,
+  ) async {
+    return Image.memory((await getMarkerUnit8List(
+      text: widget.markerLabelFormatter(label),
+      textColor: isSelected ? Colors.black : Colors.white,
+      color:
+          isSelected ? const Color(0xffeaa329) : Theme.of(context).primaryColor,
+    )));
   }
 
   void _onZoomClick() {
@@ -360,11 +392,14 @@ class _PaginationMapState<T extends marker.MarkerItem>
     });
   }
 
-  void _onCameraMove(CameraPosition position) {
+  void _onCameraMove(MapPosition position, bool hasGesture) {
     _oldPosition = _cameraPosition;
 
     if (!widget.disableCameraUpdateRequest) {
-      _cameraPosition = position.toEvent();
+      _cameraPosition = MapCameraEvent(
+        target: position.center!,
+        zoom: position.zoom ?? widget.initialCameraPosition.zoom,
+      );
     }
     if (!_cameraPosition!.isSame(widget.initialCameraPosition)) {
       _cameraPosition = widget.initialCameraPosition;
@@ -392,8 +427,8 @@ class _PaginationMapState<T extends marker.MarkerItem>
     _paginationState = PaginationState.idle;
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    widget.setMapController(controller);
+  void _onMapCreated() {
+    widget.setMapController(MapController());
     widget.setRestCallback?.call(reset);
 
     _paginationState = PaginationState.idle;
@@ -405,7 +440,7 @@ class _PaginationMapState<T extends marker.MarkerItem>
     setState(() {});
   }
 
-  void _onMapTap(LatLng argument) {
+  void _onMapTap(TapPosition position, LatLng latLng) {
     _canSendRequest = true;
     _selectedItemId = null;
     _updateMarkers();
