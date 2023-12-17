@@ -8,6 +8,7 @@ import 'package:google_maps_pagination/callbacks/callbacks.dart';
 import 'package:google_maps_pagination/enums/pagination_state.dart';
 import 'package:google_maps_pagination/models/marker_item.dart';
 import 'package:google_maps_pagination/models/pagination.dart';
+import 'package:google_maps_pagination/widgets/map_type_controller.dart';
 import 'package:google_maps_pagination/widgets/map_zoom_controller.dart';
 import 'package:google_maps_pagination/widgets/page_view_over_flow.dart';
 
@@ -65,6 +66,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final bool zoomControlsEnabled;
 
+  final bool mapTypeControlsEnabled;
+
   final bool rotateGesturesEnabled;
 
   final bool scrollGesturesEnabled;
@@ -108,6 +111,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.circles = const {},
     this.polylines = const {},
     this.zoomControlsEnabled = true,
+    this.mapTypeControlsEnabled = true,
     this.zoomGesturesEnabled = true,
     this.rotateGesturesEnabled = true,
     this.scrollGesturesEnabled = true,
@@ -142,10 +146,13 @@ class _PaginationMapState<T extends MarkerItem>
 
   bool get isItemSelected => widget.selectedItemId != null;
 
+  MapType _currentMapType = MapType.normal;
+
   @override
   void initState() {
     super.initState();
     _height = widget.initialHeight;
+    _currentMapType = widget.mapType;
   }
 
   @override
@@ -164,7 +171,11 @@ class _PaginationMapState<T extends MarkerItem>
                   onZoomInPressed: _onZoomClick,
                   onZoomOutPressed: _onZoomClick,
                 ),
-              // visible: _items.isNotEmpty && _selectedItemId != null,
+              if (widget.mapTypeControlsEnabled)
+                MapTypeController(
+                  currentMapType: _currentMapType,
+                  toggleMapType: _onMapTypeChanged,
+                ),
               Visibility(
                 visible: !_canSendRequest,
                 child: SizedBox(
@@ -265,7 +276,7 @@ class _PaginationMapState<T extends MarkerItem>
       initialCameraPosition: widget.initialCameraPosition,
       minMaxZoomPreference: widget.minMaxZoomPreference,
       markers: Set.from(markers),
-      mapType: widget.mapType,
+      mapType: _currentMapType,
       zoomGesturesEnabled: widget.zoomGesturesEnabled,
       rotateGesturesEnabled: widget.rotateGesturesEnabled,
       scrollGesturesEnabled: widget.scrollGesturesEnabled,
@@ -351,6 +362,10 @@ class _PaginationMapState<T extends MarkerItem>
     setState(() {
       _canSendRequest = true;
     });
+  }
+
+  void _onMapTypeChanged(MapType mapType) {
+    setState(() => _currentMapType = mapType);
   }
 
   void _onCameraMove(CameraPosition position) {
