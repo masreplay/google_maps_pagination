@@ -1,18 +1,17 @@
 name: google_maps_pagination
 description: Pagination with pageView and markers throw google map
-version: 0.0.2
+version: 0.0.5
 homepage: http://www.matheer.com
 repository: https://github.com/masreplay/google_maps_pagination
 
 environment:
-  sdk: ">=2.16.1 <3.0.0"
+  sdk: ">=2.16.1 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  google_maps_flutter: ^2.1.10
-
+  google_maps_flutter: ^2.5.0
 
 dev_dependencies:
   flutter_test:

@@ -36,6 +36,7 @@ class MapPaginationController extends StatelessWidget {
   final ValueChanged<int> onNextPressed;
 
   final ValueChanged<int> onPreviousPressed;
+  final VoidCallback? onMiddleTextPressed;
 
   const MapPaginationController({
     Key? key,
@@ -46,6 +47,7 @@ class MapPaginationController extends StatelessWidget {
     required this.onNextPressed,
     required this.onPreviousPressed,
     required this.noItemFoundText,
+    this.onMiddleTextPressed,
     required this.theme,
   }) : super(key: key);
 
@@ -105,9 +107,7 @@ class MapPaginationController extends StatelessWidget {
         children: [
           TextButton.icon(
             onPressed: skip != 0 && !isLoading
-                ? () {
-                    onPreviousPressed(_previousSkip);
-                  }
+                ? () => onPreviousPressed(_previousSkip)
                 : null,
             style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
             icon: Icon(
@@ -115,34 +115,32 @@ class MapPaginationController extends StatelessWidget {
               color: theme.controllerColor,
               size: 16,
             ),
-            label: Text(
-              _previousButtonTitle,
-              style: arrowButtonsTextTheme,
-            ),
+            label: Text(_previousButtonTitle, style: arrowButtonsTextTheme),
           ),
           Visibility(
             visible: !isLoading,
             replacement: const CircularProgressIndicator(),
-            child: Text(
-              _middleTitle(context),
-              style: theme.textStyle ??
-                  textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.textColor,
-                  ),
+            child: OutlinedButton(
+              onPressed: onMiddleTextPressed,
+              style: OutlinedButton.styleFrom(
+                side: onMiddleTextPressed == null ? BorderSide.none : null,
+              ),
+              child: Text(
+                _middleTitle(context),
+                style: theme.textStyle ??
+                    textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.textColor,
+                    ),
+              ),
             ),
           ),
           TextButton.icon(
             onPressed: _nextSkip < count && !isLoading
-                ? () {
-                    onNextPressed(_nextSkip);
-                  }
+                ? () => onNextPressed(_nextSkip)
                 : null,
             style: TextButton.styleFrom(foregroundColor: theme.controllerColor),
-            icon: Text(
-              _nextButtonTitle,
-              style: arrowButtonsTextTheme,
-            ),
+            icon: Text(_nextButtonTitle, style: arrowButtonsTextTheme),
             label: Icon(
               Icons.arrow_forward_ios_rounded,
               color: theme.controllerColor,
