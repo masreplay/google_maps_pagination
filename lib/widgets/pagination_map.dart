@@ -235,6 +235,9 @@ class _PaginationMapState<T extends MarkerItem>
 
   void reset() async {
     skip = 0;
+    _selectedItemId = null;
+    _canSendRequest = true;
+    widget.onSelectedItemChanged(_selectedItemId);
     await _sendRequest();
   }
 
