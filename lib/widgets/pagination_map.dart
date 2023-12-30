@@ -85,6 +85,12 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
   /// on every camera move
   final bool disableCameraUpdateRequest;
 
+  /// This default behavior of resending the request on Zoom change will be
+  /// disabled if this flag is set to true, otherwise it will call
+  /// onSelectedItemChanged(null) and reset the pagination
+  /// on every Zoom change
+  final bool disableZoomChangeRequest;
+
   final VoidCallback? onMiddleTextPressed;
 
   const PaginationMap({
@@ -117,6 +123,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.scrollGesturesEnabled = true,
     this.itemScrollZoom = 16,
     this.disableCameraUpdateRequest = false,
+    this.disableZoomChangeRequest = false,
     this.onMiddleTextPressed,
   }) : super(key: key);
 
@@ -357,6 +364,7 @@ class _PaginationMapState<T extends MarkerItem>
   }
 
   void _onZoomClick() {
+    if (widget.disableZoomChangeRequest) return;
     skip = 0;
     onSelectedItemChanged(null);
     setState(() {
