@@ -12,5 +12,5 @@ typedef MapScrollCallback = Future<void> Function(
 
 typedef ValueReturnChanged<T> = T Function(T value);
 
-typedef OnItemsChanged<T extends MarkerItem> = Future<Pagination<T>> Function(
-    int skip, CameraPosition cameraPosition);
+typedef OnItemsChanged<T extends MarkerItem> = Future<Pagination<T>>
+    Function(int skip, [CameraPosition cameraPosition, LatLngBounds bounds]);

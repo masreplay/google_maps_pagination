@@ -48,7 +48,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        body: PaginationMap<RealEstate>(
+        body: PaginationMap<RealEstate>.pagination(
           initialCameraPosition: MyApp.initialCameraPosition,
           mapController: _mapController,
           initialHeight: 100,
@@ -114,9 +114,10 @@ class ItemListTile extends StatelessWidget {
 
 // Replace it with your real items request
 Future<Pagination<RealEstate>> getFakeItems(
-  int skip,
-  CameraPosition cameraPosition,
-) async {
+  int skip, [
+  CameraPosition? cameraPosition,
+  LatLngBounds? bounds,
+]) async {
   const imageUrl =
       "https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2196&q=80";
 
