@@ -44,7 +44,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final PageController? pageViewController;
 
-  final Future<BitmapDescriptor>? Function(bool isSelected)? markerBitMap;
+  final Future<BitmapDescriptor>? Function(
+      bool isSelected, CameraPosition cameraPosition)? markerBitMap;
 
   final OnItemsChanged<T>? onItemsChanged;
 
@@ -104,6 +105,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final Widget Function(BuildContext context, bool isLoading)? loadingOverlay;
 
+  final bool disableRequestsWhenItemSelected;
+
   const PaginationMap._({
     Key? key,
     required this.initialCameraPosition,
@@ -141,6 +144,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.onCameraIdle,
     this.isWithoutPagination = false,
     this.loadingOverlay,
+    this.disableRequestsWhenItemSelected = true,
   }) : super(key: key);
 
   factory PaginationMap.pagination({
@@ -162,7 +166,9 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     bool disableCameraUpdateRequest = false,
     MapType mapType = MapType.normal,
     bool mapTypeControlsEnabled = true,
-    Future<BitmapDescriptor>? Function(bool isSelected)? markerBitMap,
+    Future<BitmapDescriptor>? Function(
+            bool isSelected, CameraPosition cameraPosition)?
+        markerBitMap,
     MinMaxZoomPreference minMaxZoomPreference =
         const MinMaxZoomPreference(6, null),
     Duration nextRequestDuration = const Duration(milliseconds: 500),
@@ -180,6 +186,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       CameraPosition cameraPosition,
     )? overlayBuilder,
     Widget Function(BuildContext, bool)? loadingOverlay,
+    bool disableRequestsWhenItemSelected = true,
   }) {
     return PaginationMap._(
       initialCameraPosition: initialCameraPosition,
@@ -215,6 +222,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       overlayBuilder: overlayBuilder,
       loadingOverlay: loadingOverlay,
       isWithoutPagination: false,
+      disableRequestsWhenItemSelected: disableRequestsWhenItemSelected,
     );
   }
 
@@ -236,7 +244,9 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     bool disableCameraUpdateRequest = false,
     MapType mapType = MapType.normal,
     bool mapTypeControlsEnabled = true,
-    Future<BitmapDescriptor>? Function(bool isSelected)? markerBitMap,
+    Future<BitmapDescriptor>? Function(
+            bool isSelected, CameraPosition cameraPosition)?
+        markerBitMap,
     MinMaxZoomPreference minMaxZoomPreference =
         const MinMaxZoomPreference(6, null),
     Duration nextRequestDuration = const Duration(milliseconds: 500),
@@ -252,6 +262,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       CameraPosition cameraPosition,
     )? overlayBuilder,
     Widget Function(BuildContext, bool)? loadingOverlay,
+    bool disableRequestsWhenItemSelected = true,
   }) {
     return PaginationMap._(
       initialCameraPosition: initialCameraPosition,
@@ -288,6 +299,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       overlayBuilder: overlayBuilder,
       maxAllowedZoomToRequest: maxAllowedZoomToRequest,
       loadingOverlay: loadingOverlay,
+      disableRequestsWhenItemSelected: disableRequestsWhenItemSelected,
     );
   }
 
@@ -313,10 +325,11 @@ class _PaginationMapState<T extends MarkerItem>
   PaginationState _paginationState = PaginationState.preparing;
 
   bool _canSendRequest = true;
+  bool _canSendRequestForce = true;
 
   double? _height;
 
-  bool get isItemSelected => widget.selectedItemId != null;
+  bool get isItemSelected => _selectedItemId != null;
 
   MapType _currentMapType = MapType.normal;
   late final cameraPositionValue =
@@ -327,6 +340,7 @@ class _PaginationMapState<T extends MarkerItem>
     super.initState();
     _height = widget.initialHeight;
     _currentMapType = widget.mapType;
+
     if (widget.mapController != null) _controller = widget.mapController!;
   }
 
@@ -441,6 +455,7 @@ class _PaginationMapState<T extends MarkerItem>
   Future<void> _onItemChanged(int index) async {
     final item = _items.results[index];
     _canSendRequest = false;
+    _canSendRequestForce = false;
     _selectedItemId = item.id;
     onSelectedItemChanged(item.id);
 
@@ -492,21 +507,39 @@ class _PaginationMapState<T extends MarkerItem>
 
     if (cameraPositionValue.value.zoom >= widget.maxAllowedZoomToRequest) {
       _sendRequest();
+    } else {
+      _updateMarkers();
     }
   }
 
   Future<void> _sendRequest() async {
     setState(() => _isLoading = true);
     _oldPosition = _cameraPosition;
+    print("_sendRequest1");
+    print(_canSendRequestForce);
+
+    if (!widget.disableRequestsWhenItemSelected && _canSendRequestForce) {
+      print("_sendRequest2");
+
+      _onMapTap(null);
+    } else {
+      _canSendRequestForce = true;
+    }
+    print("_sendRequest3");
+    print(_canSendRequest);
+    print(_canSendRequestForce);
+
     if (_cameraPosition != null && _canSendRequest) {
+      print("_sendRequest4");
+
       final bounds = await _controller!.getVisibleRegion();
       _items = await widget.onItemsChanged!.call(
         skip,
         cameraPositionValue.value,
         bounds,
       );
-      _updateMarkers();
     }
+    _updateMarkers();
     setState(() => _isLoading = false);
   }
 
@@ -528,8 +561,8 @@ class _PaginationMapState<T extends MarkerItem>
 
     setState(() => _selectedItemId = item.id);
 
-    _selectedItemId = item.id;
     await Future.delayed(const Duration(milliseconds: 100));
+    _selectedItemId = item.id;
     widget.pageViewController!.jumpToPage(index);
     _updateMarkers();
   }
@@ -541,7 +574,8 @@ class _PaginationMapState<T extends MarkerItem>
       final currentElement = _items.results[i];
       final isSelected = _selectedItemId == currentElement.id;
 
-      final markerIcon = await widget.markerBitMap?.call(isSelected) ??
+      final markerIcon = await widget.markerBitMap
+              ?.call(isSelected, cameraPositionValue.value) ??
           await _getMarkerBitMap(isSelected, currentElement.label);
 
       final marker = Marker(
@@ -617,7 +651,7 @@ class _PaginationMapState<T extends MarkerItem>
     setState(() {});
   }
 
-  void _onMapTap(LatLng argument) {
+  void _onMapTap(LatLng? argument) {
     _canSendRequest = true;
     _selectedItemId = null;
     _updateMarkers();
