@@ -436,7 +436,10 @@ class _PaginationMapState<T extends MarkerItem>
     _selectedItemId = null;
     _canSendRequest = true;
     widget.onSelectedItemChanged(_selectedItemId);
-    await _sendRequest();
+
+    if (cameraPositionValue.value.zoom >= widget.maxAllowedZoomToRequest) {
+      await _sendRequest();
+    }
   }
 
   void onSelectedItemChanged(String? id) {
@@ -465,7 +468,9 @@ class _PaginationMapState<T extends MarkerItem>
             ? CameraPosition(target: item.location)
             : CameraPosition(
                 target: item.location,
-                zoom: widget.itemScrollZoom!,
+                zoom: widget.itemScrollZoom! > cameraPositionValue.value.zoom
+                    ? widget.itemScrollZoom!
+                    : cameraPositionValue.value.zoom,
               ),
       ),
     );
@@ -515,23 +520,14 @@ class _PaginationMapState<T extends MarkerItem>
   Future<void> _sendRequest() async {
     setState(() => _isLoading = true);
     _oldPosition = _cameraPosition;
-    print("_sendRequest1");
-    print(_canSendRequestForce);
 
     if (!widget.disableRequestsWhenItemSelected && _canSendRequestForce) {
-      print("_sendRequest2");
-
       _onMapTap(null);
     } else {
       _canSendRequestForce = true;
     }
-    print("_sendRequest3");
-    print(_canSendRequest);
-    print(_canSendRequestForce);
 
     if (_cameraPosition != null && _canSendRequest) {
-      print("_sendRequest4");
-
       final bounds = await _controller!.getVisibleRegion();
       _items = await widget.onItemsChanged!.call(
         skip,
@@ -549,9 +545,11 @@ class _PaginationMapState<T extends MarkerItem>
   ) async {
     return await getMarkerBitmap(
       text: widget.markerLabelFormatter(label),
-      textColor: isSelected ? Colors.black : Colors.white,
-      color:
-          isSelected ? const Color(0xffeaa329) : Theme.of(context).primaryColor,
+      textColor: isSelected ? Colors.white : Theme.of(context).primaryColor,
+      color: isSelected ? Theme.of(context).primaryColor : Colors.white,
+      strokeColor: Theme.of(context).primaryColor,
+      strokeWidth: 10,
+      familyFont: DefaultTextStyle.of(context).style.fontFamily,
     );
   }
 

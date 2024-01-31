@@ -16,13 +16,13 @@ Future<BitmapDescriptor> getMarkerBitmap({
   String? familyFont,
 }) async {
   size ??= text.getWidth();
-  double width = size * 3;
-  double height = 75;
+  double width = size * 4;
+  double height = 100;
 
-  double radius = size / 8;
+  double radius = size / 5;
   double arrowWidth = height / 3;
   double arrowHeight = height / 5;
-  double arrowRadius = 0.0;
+  double arrowRadius = 0.5;
 
   double shadowOffset = 10.0;
 
