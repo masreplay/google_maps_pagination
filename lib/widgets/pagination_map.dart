@@ -279,7 +279,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       defaultMapTake: 100,
       disableCameraUpdateRequest: disableCameraUpdateRequest,
       disableZoomChangeRequest: disableZoomChangeRequest,
-      initialHeight: 0,
+      initialHeight: 100,
       itemScrollZoom: itemScrollZoom,
       mapType: mapType,
       mapTypeControlsEnabled: mapTypeControlsEnabled,
@@ -325,7 +325,7 @@ class _PaginationMapState<T extends MarkerItem>
   PaginationState _paginationState = PaginationState.preparing;
 
   bool _canSendRequest = true;
-  bool _canSendRequestForce = true;
+  bool _cantSendRequestForce = false;
 
   double? _height;
 
@@ -381,10 +381,11 @@ class _PaginationMapState<T extends MarkerItem>
                       return OverflowBox(
                         /// needed, so that parent won't impose its constraints on the children,
                         /// thus skewing the measurement results.
-                        minHeight: 0,
+                        minHeight: widget.initialHeight,
                         maxHeight: double.infinity,
                         alignment: Alignment.topCenter,
                         child: SizeReportingWidget(
+                          height: _height,
                           onSizeChange: (size) {
                             setState(() => _height = size?.height);
                             if (kDebugMode) {
@@ -458,7 +459,7 @@ class _PaginationMapState<T extends MarkerItem>
   Future<void> _onItemChanged(int index) async {
     final item = _items.results[index];
     _canSendRequest = false;
-    _canSendRequestForce = false;
+    _cantSendRequestForce = true;
     _selectedItemId = item.id;
     onSelectedItemChanged(item.id);
 
@@ -521,10 +522,12 @@ class _PaginationMapState<T extends MarkerItem>
     setState(() => _isLoading = true);
     _oldPosition = _cameraPosition;
 
-    if (!widget.disableRequestsWhenItemSelected && _canSendRequestForce) {
+    if (!widget.disableRequestsWhenItemSelected && !_cantSendRequestForce) {
       _onMapTap(null);
     } else {
-      _canSendRequestForce = true;
+      setState(() => _isLoading = false);
+      _cantSendRequestForce = false;
+      return;
     }
 
     if (_cameraPosition != null && _canSendRequest) {
@@ -556,6 +559,7 @@ class _PaginationMapState<T extends MarkerItem>
   void _onMarkerPressed(int index) async {
     final item = _items.results[index];
     _canSendRequest = false;
+    _cantSendRequestForce = true;
 
     setState(() => _selectedItemId = item.id);
 
