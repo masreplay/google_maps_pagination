@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_pagination/callbacks/callbacks.dart';
 import 'package:google_maps_pagination/enums/pagination_state.dart';
+import 'package:google_maps_pagination/models/marker_decorations.dart';
 import 'package:google_maps_pagination/models/marker_item.dart';
 import 'package:google_maps_pagination/models/pagination.dart';
 import 'package:google_maps_pagination/widgets/map_type_controller.dart';
@@ -107,6 +108,8 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
 
   final bool disableRequestsWhenItemSelected;
 
+  final MarkerDecorations Function(bool isSelected)? markerDecorations;
+
   const PaginationMap._({
     Key? key,
     required this.initialCameraPosition,
@@ -145,6 +148,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     this.isWithoutPagination = false,
     this.loadingOverlay,
     this.disableRequestsWhenItemSelected = true,
+    this.markerDecorations,
   }) : super(key: key);
 
   factory PaginationMap.pagination({
@@ -158,6 +162,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     required OnItemsChanged<T> onItemsChanged,
     required MapPaginationControllerTheme controllerTheme,
     required String? selectedItemId,
+    MarkerDecorations Function(bool isSelected)? markerDecorations,
     Set<Circle> circles = const {},
     Set<Polygon> polygons = const {},
     Set<Polyline> polylines = const {},
@@ -223,6 +228,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       loadingOverlay: loadingOverlay,
       isWithoutPagination: false,
       disableRequestsWhenItemSelected: disableRequestsWhenItemSelected,
+      markerDecorations: markerDecorations,
     );
   }
 
@@ -236,6 +242,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
     required Widget Function(BuildContext, T, int) itemBuilder,
     required OnItemsChanged<T> onItemsChanged,
     required String? selectedItemId,
+    MarkerDecorations Function(bool isSelected)? markerDecorations,
     Set<Circle> circles = const {},
     Set<Polygon> polygons = const {},
     Set<Polyline> polylines = const {},
@@ -300,6 +307,7 @@ class PaginationMap<T extends MarkerItem> extends StatefulWidget {
       maxAllowedZoomToRequest: maxAllowedZoomToRequest,
       loadingOverlay: loadingOverlay,
       disableRequestsWhenItemSelected: disableRequestsWhenItemSelected,
+      markerDecorations: markerDecorations,
     );
   }
 
@@ -546,13 +554,19 @@ class _PaginationMapState<T extends MarkerItem>
     bool isSelected,
     String label,
   ) async {
+    final decorations = widget.markerDecorations?.call(isSelected) ??
+        MarkerDecorations(
+          color: isSelected ? Colors.white : Theme.of(context).primaryColor,
+          strokeColor:
+              isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
+          strokeWidth: 10,
+          familyFont: DefaultTextStyle.of(context).style.fontFamily,
+          textColor: isSelected ? Colors.white : Theme.of(context).primaryColor,
+        );
+
     return await getMarkerBitmap(
       text: widget.markerLabelFormatter(label),
-      textColor: isSelected ? Colors.white : Theme.of(context).primaryColor,
-      color: isSelected ? Theme.of(context).primaryColor : Colors.white,
-      strokeColor: Theme.of(context).primaryColor,
-      strokeWidth: 10,
-      familyFont: DefaultTextStyle.of(context).style.fontFamily,
+      markerDecorations: decorations,
     );
   }
 

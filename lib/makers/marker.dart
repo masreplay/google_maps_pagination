@@ -4,22 +4,22 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_pagination/models/marker_decorations.dart';
 
 Future<BitmapDescriptor> getMarkerBitmap({
-  double? size,
   required String text,
-  required Color color,
-  double strokeWidth = 4,
-  Color strokeColor = Colors.white,
-  Color textColor = Colors.white,
-  TextDirection textDirection = TextDirection.rtl,
-  String? familyFont,
+  required MarkerDecorations markerDecorations,
 }) async {
-  size ??= text.getWidth();
-  double width = size * 4;
-  double height = 100;
+  if (markerDecorations.width == null) {
+    markerDecorations = markerDecorations.copyWith(
+      width: text.getWidth(),
+    );
+  }
 
-  double radius = size / 5;
+  double width = markerDecorations.width! * 4;
+  double height = markerDecorations.height;
+
+  double radius = markerDecorations.radius ?? width;
   double arrowWidth = height / 3;
   double arrowHeight = height / 5;
   double arrowRadius = 0.5;
@@ -28,7 +28,7 @@ Future<BitmapDescriptor> getMarkerBitmap({
 
   final PictureRecorder pictureRecorder = PictureRecorder();
   final Canvas canvas = Canvas(pictureRecorder);
-  final Paint paint = Paint()..color = color;
+  final Paint paint = Paint()..color = markerDecorations.color;
 
   /// if right is less than left or bottom is less than top then the rectangle is not drawn
   var rect = Rect.fromLTRB(width - 4, height - 4, 4, 4);
@@ -45,10 +45,10 @@ Future<BitmapDescriptor> getMarkerBitmap({
 
   /// border
   Paint borderPaint = Paint()
-    ..color = strokeColor
+    ..color = markerDecorations.strokeColor
     ..style = PaintingStyle.stroke
     ..strokeJoin = StrokeJoin.round
-    ..strokeWidth = strokeWidth;
+    ..strokeWidth = markerDecorations.strokeWidth;
 
   canvas.drawPath(path, borderPaint);
 
@@ -56,14 +56,15 @@ Future<BitmapDescriptor> getMarkerBitmap({
   canvas.drawPath(path, paint);
 
   /// text
-  TextPainter painter = TextPainter(textDirection: textDirection);
+  TextPainter painter =
+      TextPainter(textDirection: markerDecorations.textDirection);
   painter.text = TextSpan(
     text: text,
     style: TextStyle(
-      fontSize: 35,
-      color: textColor,
-      fontWeight: FontWeight.bold,
-      fontFamily: familyFont,
+      fontSize: markerDecorations.fontSize,
+      color: markerDecorations.textColor,
+      fontWeight: markerDecorations.fontWeight,
+      fontFamily: markerDecorations.familyFont,
     ),
   );
   painter.layout();
