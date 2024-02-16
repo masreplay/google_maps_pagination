@@ -556,7 +556,7 @@ class _PaginationMapState<T extends MarkerItem>
   ) async {
     final decorations = widget.markerDecorations?.call(isSelected) ??
         MarkerDecorations(
-          color: isSelected ? Colors.white : Theme.of(context).primaryColor,
+          color: !isSelected ? Colors.white : Theme.of(context).primaryColor,
           strokeColor:
               isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
           strokeWidth: 10,
