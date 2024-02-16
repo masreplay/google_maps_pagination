@@ -562,6 +562,7 @@ class _PaginationMapState<T extends MarkerItem>
           strokeWidth: 10,
           familyFont: DefaultTextStyle.of(context).style.fontFamily,
           textColor: isSelected ? Colors.white : Theme.of(context).primaryColor,
+          textDirection: Directionality.of(context),
         );
 
     return await getMarkerBitmap(

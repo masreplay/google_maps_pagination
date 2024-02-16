@@ -12,7 +12,7 @@ Future<BitmapDescriptor> getMarkerBitmap({
 }) async {
   if (markerDecorations.width == null) {
     markerDecorations = markerDecorations.copyWith(
-      width: text.getWidth(),
+      width: text.getWidth(markerDecorations.textDirection),
     );
   }
 
@@ -82,13 +82,13 @@ Future<BitmapDescriptor> getMarkerBitmap({
 }
 
 extension StringExtension on String {
-  double getWidth() {
+  double getWidth(TextDirection textDirection) {
     final TextPainter textPainter = TextPainter(
       text: TextSpan(text: this),
-      textDirection: TextDirection.ltr,
+      textDirection: textDirection,
       maxLines: 1,
     )..layout(minWidth: 0, maxWidth: double.infinity);
 
-    return textPainter.size.width + 10;
+    return textPainter.size.width + 5;
   }
 }
