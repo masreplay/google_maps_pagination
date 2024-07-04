@@ -356,84 +356,89 @@ class _PaginationMapState<T extends MarkerItem>
   Widget build(BuildContext context) {
     return SafeArea(
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           _buildGoogleMap(context),
           if (widget.loadingOverlay != null)
             widget.loadingOverlay!.call(context, _isLoading),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (widget.zoomControlsEnabled)
-                MapZoomController(
-                  mapController: _controller,
-                  onZoomInPressed: _onZoomClick,
-                  onZoomOutPressed: _onZoomClick,
-                ),
-              if (widget.mapTypeControlsEnabled)
-                MapTypeController(
-                  currentMapType: _currentMapType,
-                  toggleMapType: _onMapTypeChanged,
-                ),
-              Visibility(
-                visible: !_canSendRequest,
-                child: SizedBox(
-                  height: _height,
-                  child: PageView.builder(
-                    controller: widget.pageViewController,
-                    onPageChanged: _onItemChanged,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: _items.results.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return OverflowBox(
-                        /// needed, so that parent won't impose its constraints on the children,
-                        /// thus skewing the measurement results.
-                        minHeight: widget.initialHeight,
-                        maxHeight: double.infinity,
-                        alignment: Alignment.topCenter,
-                        child: SizeReportingWidget(
-                          height: _height,
-                          onSizeChange: (size) {
-                            setState(() => _height = size?.height);
-                            if (kDebugMode) {
-                              log("Pagination map ${widget.initialHeight} - $size");
-                            }
-                          },
-                          child: widget.itemBuilder(
-                            context,
-                            _items.results[index],
-                            index,
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.zoomControlsEnabled)
+                  MapZoomController(
+                    mapController: _controller,
+                    onZoomInPressed: _onZoomClick,
+                    onZoomOutPressed: _onZoomClick,
+                  ),
+                if (widget.mapTypeControlsEnabled)
+                  MapTypeController(
+                    currentMapType: _currentMapType,
+                    toggleMapType: _onMapTypeChanged,
+                  ),
+                Visibility(
+                  visible: !_canSendRequest,
+                  child: SizedBox(
+                    height: _height,
+                    child: PageView.builder(
+                      controller: widget.pageViewController,
+                      onPageChanged: _onItemChanged,
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: _items.results.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return OverflowBox(
+                          /// needed, so that parent won't impose its constraints on the children,
+                          /// thus skewing the measurement results.
+                          minHeight: widget.initialHeight,
+                          maxHeight: double.infinity,
+                          alignment: Alignment.topCenter,
+                          child: SizeReportingWidget(
+                            height: _height,
+                            onSizeChange: (size) {
+                              setState(() => _height = size?.height);
+                              if (kDebugMode) {
+                                log("Pagination map ${widget.initialHeight} - $size");
+                              }
+                            },
+                            child: widget.itemBuilder(
+                              context,
+                              _items.results[index],
+                              index,
+                            ),
                           ),
-                        ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                if (widget.overlayBuilder != null)
+                  ValueListenableBuilder<CameraPosition>(
+                    valueListenable: cameraPositionValue,
+                    builder: (context, cameraPosition, _) {
+                      return widget.overlayBuilder!.call(
+                        context,
+                        cameraPosition,
                       );
                     },
                   ),
-                ),
-              ),
-              if (widget.overlayBuilder != null)
-                ValueListenableBuilder<CameraPosition>(
-                  valueListenable: cameraPositionValue,
-                  builder: (context, cameraPosition, _) {
-                    return widget.overlayBuilder!.call(
-                      context,
-                      cameraPosition,
-                    );
-                  },
-                ),
-              if (!widget.isWithoutPagination)
-                MapPaginationController(
-                  skip: skip,
-                  limit: widget.defaultMapTake,
-                  count: _items.count,
-                  isLoading: _isLoading,
-                  noItemFoundText: widget.noItemFoundText,
-                  theme: widget.controllerTheme!,
-                  onNextPressed: _onSkipChange,
-                  onPreviousPressed: _onSkipChange,
-                  onMiddleTextPressed: widget.onMiddleTextPressed,
-                ),
-            ],
+                if (!widget.isWithoutPagination)
+                  MapPaginationController(
+                    skip: skip,
+                    limit: widget.defaultMapTake,
+                    count: _items.count,
+                    isLoading: _isLoading,
+                    noItemFoundText: widget.noItemFoundText,
+                    theme: widget.controllerTheme!,
+                    onNextPressed: _onSkipChange,
+                    onPreviousPressed: _onSkipChange,
+                    onMiddleTextPressed: widget.onMiddleTextPressed,
+                  ),
+              ],
+            ),
           ),
         ],
       ),
